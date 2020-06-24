@@ -13,10 +13,10 @@ public:
 	ULuaSetHelper();
 	void* Obj;
 
-	USetProperty* Property;
+	FSetProperty* Property;
 
-	void Init(void* _Obj, USetProperty* _Property);
-	void Init_ValuePtr(void* _Obj, USetProperty* _Property);
+	void Init(void* _Obj, FSetProperty* _Property);
+	void Init_ValuePtr(void* _Obj, FSetProperty* _Property);
 
 	template<class T>
 	TSet<T>* ValuePtr()
@@ -26,14 +26,14 @@ public:
 
 	static ULuaSetHelper* GetHelper(UObject* _Obj, const FName& PropertyName);
 
-	static ULuaSetHelper* GetHelperCPP(void* _Obj, USetProperty* Property);
-	static ULuaSetHelper* GetHelperCPP_ValuePtr(void* _Obj, USetProperty* Property);
+	static ULuaSetHelper* GetHelperCPP(void* _Obj, FSetProperty* Property);
+	static ULuaSetHelper* GetHelperCPP_ValuePtr(void* _Obj, FSetProperty* Property);
 
-	static void Copy(FScriptSetHelper& SrcSetHelper, FScriptSetHelper& DestSetHelper, USetProperty* p);
-	void CopyTo(USetProperty* p, void* ptr);
-	void CopyFrom(USetProperty* p, void* ptr);
+	static void Copy(FScriptSetHelper& SrcSetHelper, FScriptSetHelper& DestSetHelper, FSetProperty* p);
+	void CopyTo(FSetProperty* p, void* ptr);
+	void CopyFrom(FSetProperty* p, void* ptr);
 
-	static void GlueSetCopyTo(USetProperty* p, const void* src, const void* dest);
+	static void GlueSetCopyTo(FSetProperty* p, const void* src, const void* dest);
 
 	int32 Num();
 

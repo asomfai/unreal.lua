@@ -127,7 +127,7 @@ void ULuaDelegateSingle::Fire(lua_State* inL)
 		int ArgCount = lua_gettop(inL);
 
 		// Iterate over input parameters
-		for (TFieldIterator<UProperty> It(Function); It && (It->GetPropertyFlags() & (CPF_Parm)); ++It)
+		for (TFieldIterator<FProperty> It(Function); It && (It->GetPropertyFlags() & (CPF_Parm)); ++It)
 		{
 			auto Prop = *It;
 			if (ArgIndex <= ArgCount)

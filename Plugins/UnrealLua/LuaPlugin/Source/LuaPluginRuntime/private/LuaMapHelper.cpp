@@ -11,13 +11,13 @@ ULuaMapHelper::ULuaMapHelper()
 // 		 LuaCtor("frame.luamaphelper", this);
 }
 
-void ULuaMapHelper::Init(void* _Obj, UMapProperty* _Property)
+void ULuaMapHelper::Init(void* _Obj, FMapProperty* _Property)
 {
 	Property = _Property;
 	Obj = Property->ContainerPtrToValuePtr<void>(_Obj);
 }
 
-void ULuaMapHelper::Init_ValuePtr(void* _Obj, UMapProperty* _Property)
+void ULuaMapHelper::Init_ValuePtr(void* _Obj, FMapProperty* _Property)
 {
 	Property = _Property;
 	Obj = _Obj;
@@ -47,7 +47,7 @@ int32 ULuaMapHelper::__newindex(lua_State* inL)
 
 ULuaMapHelper* ULuaMapHelper::GetHelper(UObject* _Obj, const FName& PropertyName)
 {
-	UMapProperty* P = Cast<UMapProperty>(_Obj->GetClass()->FindPropertyByName(PropertyName));
+	FMapProperty* P = Cast<FMapProperty>(_Obj->GetClass()->FindPropertyByName(PropertyName));
 	if (P)
 	{
 		return GetHelperCPP(_Obj, P);
@@ -56,21 +56,21 @@ ULuaMapHelper* ULuaMapHelper::GetHelper(UObject* _Obj, const FName& PropertyName
 		return nullptr;
 }
 
-ULuaMapHelper* ULuaMapHelper::GetHelperCPP(void* _Obj, UMapProperty* Property)
+ULuaMapHelper* ULuaMapHelper::GetHelperCPP(void* _Obj, FMapProperty* Property)
 {
 	ULuaMapHelper* Result = new ULuaMapHelper;
 	Result->Init(_Obj, Property);
 	return Result;
 }
 
-ULuaMapHelper* ULuaMapHelper::GetHelperCPP_ValuePtr(void* _Obj, UMapProperty* Property)
+ULuaMapHelper* ULuaMapHelper::GetHelperCPP_ValuePtr(void* _Obj, FMapProperty* Property)
 {
 	ULuaMapHelper* Result = new ULuaMapHelper;
 	Result->Init_ValuePtr(_Obj, Property);
 	return Result;
 }
 
-void ULuaMapHelper::Copy(FScriptMapHelper& SrcMapHelper, FScriptMapHelper& DestMapHelper, UMapProperty* p)
+void ULuaMapHelper::Copy(FScriptMapHelper& SrcMapHelper, FScriptMapHelper& DestMapHelper, FMapProperty* p)
 {
 	int32 Num = SrcMapHelper.Num();
 	DestMapHelper.EmptyValues(Num);
@@ -99,7 +99,7 @@ void ULuaMapHelper::Copy(FScriptMapHelper& SrcMapHelper, FScriptMapHelper& DestM
 	DestMapHelper.Rehash();
 }
 
-void ULuaMapHelper::CopyTo(UMapProperty* p, void* ptr)
+void ULuaMapHelper::CopyTo(FMapProperty* p, void* ptr)
 {
 	if (ptr == Obj && p == Property)
 		return;
@@ -108,7 +108,7 @@ void ULuaMapHelper::CopyTo(UMapProperty* p, void* ptr)
 	Copy(SrcMapHelper, DestMapHelper, p);
 }
 
-void ULuaMapHelper::CopyFrom(UMapProperty* p, void* ptr)
+void ULuaMapHelper::CopyFrom(FMapProperty* p, void* ptr)
 {
 	if (ptr == Obj && p == Property)
 		return;
@@ -117,7 +117,7 @@ void ULuaMapHelper::CopyFrom(UMapProperty* p, void* ptr)
 	Copy(SrcMapHelper, DestMapHelper, Property);
 }
 
-void ULuaMapHelper::GlueMapCopyTo(UMapProperty* p, const void* src, const void* dest)
+void ULuaMapHelper::GlueMapCopyTo(FMapProperty* p, const void* src, const void* dest)
 {
 	FScriptMapHelper SrcHelper(p, src);
 	FScriptMapHelper DestHelper(p, dest);
@@ -140,7 +140,7 @@ int32 ULuaMapHelper::Get(lua_State* inL)
 	}
 #endif
 	FScriptMapHelper result(Property, Obj);
-	UProperty* CurrKeyProp = Property->KeyProp;
+	FProperty* CurrKeyProp = Property->KeyProp;
 	const int32 KeyPropertySize = CurrKeyProp->ElementSize * CurrKeyProp->ArrayDim;
 	void* KeyStorageSpace = FMemory_Alloca(KeyPropertySize);
 	CurrKeyProp->InitializeValue(KeyStorageSpace);
@@ -166,7 +166,7 @@ void ULuaMapHelper::Set(lua_State* inL)
 	}
 #endif
 	FScriptMapHelper result(Property, Obj);
-	UProperty* CurrKeyProp = Property->KeyProp;
+	FProperty* CurrKeyProp = Property->KeyProp;
 	const int32 KeyPropertySize = CurrKeyProp->ElementSize * CurrKeyProp->ArrayDim;
 	void* KeyStorageSpace = FMemory_Alloca(KeyPropertySize);
 	CurrKeyProp->InitializeValue(KeyStorageSpace);
@@ -201,14 +201,14 @@ void ULuaMapHelper::Add(lua_State* inL)
 #endif
 	FScriptMapHelper result(Property, Obj);
 
-	UProperty* CurrKeyProp = Property->KeyProp;
+	FProperty* CurrKeyProp = Property->KeyProp;
 	const int32 KeyPropertySize = CurrKeyProp->ElementSize * CurrKeyProp->ArrayDim;
 	void* KeyStorageSpace = FMemory_Alloca(KeyPropertySize);
 	CurrKeyProp->InitializeValue(KeyStorageSpace);
 	UTableUtil::popproperty(inL, 2, CurrKeyProp, KeyStorageSpace);
 	
 
-	UProperty* CurrValueProp = Property->ValueProp;
+	FProperty* CurrValueProp = Property->ValueProp;
 	const int32 ValuePropertySize = CurrValueProp->ElementSize * CurrValueProp->ArrayDim;
 	uint8* ValueStorageSpace = (uint8*)FMemory_Alloca(ValuePropertySize);
 	CurrValueProp->InitializeValue(ValueStorageSpace);

@@ -13,9 +13,9 @@ public:
 	ULuaArrayHelper();
 	void* Obj;
 
-	UArrayProperty* Property;
-	void Init(void* _Obj, UArrayProperty* _Property);
-	void Init_ValuePtr(void* _Obj, UArrayProperty* _Property);
+	FArrayProperty* Property;
+	void Init(void* _Obj, FArrayProperty* _Property);
+	void Init_ValuePtr(void* _Obj, FArrayProperty* _Property);
 	uint32 GetElementSize() { return Property->Inner->ElementSize; }
 	template<class T>
 	TArray<T>* ValuePtr()
@@ -24,14 +24,14 @@ public:
 	}
 	static ULuaArrayHelper* GetHelper(UObject* _Obj, const FName& PropertyName);
 
-	static ULuaArrayHelper* GetHelperCPP(void* _Obj, UArrayProperty* Property);
-	static ULuaArrayHelper* GetHelperCPP_ValuePtr(void* _Obj, UArrayProperty* Property);
+	static ULuaArrayHelper* GetHelperCPP(void* _Obj, FArrayProperty* Property);
+	static ULuaArrayHelper* GetHelperCPP_ValuePtr(void* _Obj, FArrayProperty* Property);
 
-	static void Copy(FScriptArrayHelper& SrcArrayHelper, FScriptArrayHelper& DestArrayHelper, UArrayProperty* p);
-	void CopyTo(UArrayProperty* p, const void* ptr);
-	void CopyFrom(UArrayProperty* p, const void* ptr);
+	static void Copy(FScriptArrayHelper& SrcArrayHelper, FScriptArrayHelper& DestArrayHelper, FArrayProperty* p);
+	void CopyTo(FArrayProperty* p, const void* ptr);
+	void CopyFrom(FArrayProperty* p, const void* ptr);
 
-	static void GlueArrCopyTo(UArrayProperty* p, const void* src, const void* dest);
+	static void GlueArrCopyTo(FArrayProperty* p, const void* src, const void* dest);
 
 		int32 Num();
 

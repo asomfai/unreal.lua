@@ -10,7 +10,7 @@ ULuaArrayHelper::ULuaArrayHelper()
 // 		LuaCtor("frame.luaarrayhelper", this);
 }
 
-void ULuaArrayHelper::Init(void* _Obj, UArrayProperty* _Property)
+void ULuaArrayHelper::Init(void* _Obj, FArrayProperty* _Property)
 {
 	Property = _Property;
 	Obj = Property->ContainerPtrToValuePtr<void>(_Obj);
@@ -18,7 +18,7 @@ void ULuaArrayHelper::Init(void* _Obj, UArrayProperty* _Property)
 	// ValuePtr = Property->ContainerPtrToValuePtr<void>(Obj);
 }
 
-void ULuaArrayHelper::Init_ValuePtr(void* _Obj, UArrayProperty* _Property)
+void ULuaArrayHelper::Init_ValuePtr(void* _Obj, FArrayProperty* _Property)
 {
 	Property = _Property;
 	Obj = _Obj;
@@ -27,7 +27,7 @@ void ULuaArrayHelper::Init_ValuePtr(void* _Obj, UArrayProperty* _Property)
 
 ULuaArrayHelper* ULuaArrayHelper::GetHelper(UObject* _Obj, const FName& PropertyName)
 {
-	UArrayProperty* P = Cast<UArrayProperty>(_Obj->GetClass()->FindPropertyByName(PropertyName));
+	FArrayProperty* P = CastFieldChecked<FArrayProperty>(_Obj->GetClass()->FindPropertyByName(PropertyName));
 	if (P)
 	{
 		return GetHelperCPP(_Obj, P);
@@ -36,21 +36,21 @@ ULuaArrayHelper* ULuaArrayHelper::GetHelper(UObject* _Obj, const FName& Property
 		return nullptr;
 }
 
-ULuaArrayHelper* ULuaArrayHelper::GetHelperCPP(void* _Obj, UArrayProperty* Property)
+ULuaArrayHelper* ULuaArrayHelper::GetHelperCPP(void* _Obj, FArrayProperty* Property)
 {
 	ULuaArrayHelper* Result = new ULuaArrayHelper;
 	Result->Init(_Obj, Property);
 	return Result;
 }
 
-ULuaArrayHelper* ULuaArrayHelper::GetHelperCPP_ValuePtr(void* _Obj, UArrayProperty* Property)
+ULuaArrayHelper* ULuaArrayHelper::GetHelperCPP_ValuePtr(void* _Obj, FArrayProperty* Property)
 {
 	ULuaArrayHelper* Result = new ULuaArrayHelper;
 	Result->Init_ValuePtr(_Obj, Property);
 	return Result;
 }
 
-void ULuaArrayHelper::Copy(FScriptArrayHelper& SrcArrayHelper, FScriptArrayHelper& DestArrayHelper, UArrayProperty* p)
+void ULuaArrayHelper::Copy(FScriptArrayHelper& SrcArrayHelper, FScriptArrayHelper& DestArrayHelper, FArrayProperty* p)
 {
 	int32 Num = SrcArrayHelper.Num();
 	if (!(p->Inner->PropertyFlags & CPF_IsPlainOldData))
@@ -80,7 +80,7 @@ void ULuaArrayHelper::Copy(FScriptArrayHelper& SrcArrayHelper, FScriptArrayHelpe
 	}
 }
 
-void ULuaArrayHelper::CopyTo(UArrayProperty* p, const void* ptr)
+void ULuaArrayHelper::CopyTo(FArrayProperty* p, const void* ptr)
 {
 	if (ptr == Obj && p == Property)
 		return;
@@ -89,7 +89,7 @@ void ULuaArrayHelper::CopyTo(UArrayProperty* p, const void* ptr)
 	Copy(SrcArrayHelper, DestArrayHelper, p);
 }
 
-void ULuaArrayHelper::CopyFrom(UArrayProperty* p, const void* ptr)
+void ULuaArrayHelper::CopyFrom(FArrayProperty* p, const void* ptr)
 {
 	if (ptr == Obj && p == Property)
 		return;
@@ -98,7 +98,7 @@ void ULuaArrayHelper::CopyFrom(UArrayProperty* p, const void* ptr)
 	Copy(SrcArrayHelper, DestArrayHelper, Property);
 }
 
-void ULuaArrayHelper::GlueArrCopyTo(UArrayProperty* p, const void* src, const void* dest)
+void ULuaArrayHelper::GlueArrCopyTo(FArrayProperty* p, const void* src, const void* dest)
 {
 	FScriptArrayHelper SrcArrayHelper(p, src);
 	FScriptArrayHelper DestArrayHelper(p, dest);
@@ -122,7 +122,7 @@ int32 ULuaArrayHelper::Get(lua_State* inL)
 		return 0;
 	}
 	
-	UProperty* InnerProperty = Property->Inner;
+	FProperty* InnerProperty = Property->Inner;
 	UTableUtil::pushproperty(inL, InnerProperty, result.GetRawPtr(Index));
 	return 1;
 }
@@ -172,7 +172,7 @@ int32 ULuaArrayHelper::travel(lua_State* inL)
 	{
 		lua_pushinteger(inL, Index + 1);
 		FScriptArrayHelper result(ptr->Property, ptr->Obj);
-		UProperty* InnerProperty = ptr->Property->Inner;
+		FProperty* InnerProperty = ptr->Property->Inner;
 		UTableUtil::pushproperty(inL, InnerProperty, result.GetRawPtr(Index));
 		return 2;
 	}
@@ -185,7 +185,7 @@ int32 ULuaArrayHelper::Set(lua_State*inL)
 	int32 Index = lua_tointeger(inL, 2) - 1;
 	FScriptArrayHelper result(Property, Obj);
 	result.ExpandForIndex(Index);
-	UProperty* InnerProperty = Property->Inner;
+	FProperty* InnerProperty = Property->Inner;
 	UTableUtil::popproperty(inL, 3, InnerProperty, result.GetRawPtr(Index));
 	return 0;
 }
@@ -193,7 +193,7 @@ int32 ULuaArrayHelper::Set(lua_State*inL)
 void ULuaArrayHelper::Add(lua_State* inL)
 {
 	FScriptArrayHelper result(Property, Obj);
-	UProperty* InnerProperty = Property->Inner;
+	FProperty* InnerProperty = Property->Inner;
 	int32 Index = result.AddValue();
 	UTableUtil::popproperty(inL, 2, InnerProperty, result.GetRawPtr(Index));
 }
@@ -202,7 +202,7 @@ int32 ULuaArrayHelper::Remove(lua_State* inL)
 {
 	int32 Index = lua_tointeger(inL, 2) - 1;
 	FScriptArrayHelper result(Property, Obj);
-	UProperty* InnerProperty = Property->Inner;
+	FProperty* InnerProperty = Property->Inner;
 	if (!result.IsValidIndex(Index))
 	{
 		ensureMsgf(0, TEXT("Index Invalid"));
@@ -219,7 +219,7 @@ int32 ULuaArrayHelper::Pop(lua_State* inL)
 	FScriptArrayHelper result(Property, Obj);
 	if (result.Num() > 0)
 	{
-		UProperty* InnerProperty = Property->Inner;
+		FProperty* InnerProperty = Property->Inner;
 		int32 Index = result.Num() - 1;
 		UTableUtil::pushproperty(inL, InnerProperty, result.GetRawPtr(Index));
 		result.RemoveValues(Index);
@@ -233,7 +233,7 @@ void ULuaArrayHelper::Insert(lua_State* inL)
 {
 	int32 Index = lua_tointeger(inL, 2) - 1;
 	FScriptArrayHelper result(Property, Obj);
-	UProperty* InnerProperty = Property->Inner;
+	FProperty* InnerProperty = Property->Inner;
 	result.InsertValues(Index);
 	UTableUtil::popproperty(inL, 3, InnerProperty, result.GetRawPtr(Index));
 }

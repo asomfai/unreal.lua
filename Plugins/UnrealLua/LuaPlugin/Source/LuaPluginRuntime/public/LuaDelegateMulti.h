@@ -55,8 +55,8 @@ class LUAPLUGINRUNTIME_API ULuaDelegateMulti : public UObject
 	struct FSparseDelegateWrapper :public IDelegateWrapper
 	{
 		UObject* Parent;
-		UMulticastSparseDelegateProperty* Property;
-		FSparseDelegateWrapper(UObject* InParent, UMulticastSparseDelegateProperty* InProperty) :Parent(InParent), Property(InProperty) {}
+		FMulticastSparseDelegateProperty* Property;
+		FSparseDelegateWrapper(UObject* InParent, FMulticastSparseDelegateProperty* InProperty) :Parent(InParent), Property(InProperty) {}
 		const FMulticastScriptDelegate* GetMD()
 		{
 			void* PropertyValue = Property->GetPropertyValuePtr_InContainer(Parent);
@@ -104,7 +104,7 @@ public:
 	void Init(void* Delegate, UFunction* _FunSig);
 
 #if ENGINE_MINOR_VERSION >= 23
-	void Init(UMulticastSparseDelegateProperty* Property, UObject* Parent);
+	void Init(FMulticastSparseDelegateProperty* Property, UObject* Parent);
 #endif
 
 	UFUNCTION()

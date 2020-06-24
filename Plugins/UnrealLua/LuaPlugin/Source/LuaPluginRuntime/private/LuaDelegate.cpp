@@ -20,7 +20,7 @@ void ULuaDelegateMulti::Init(void* Delegate, UFunction* _FunSig)
 }
 
 #if ENGINE_MINOR_VERSION >= 23
-void ULuaDelegateMulti::Init(UMulticastSparseDelegateProperty* Property, UObject* Parent)
+void ULuaDelegateMulti::Init(FMulticastSparseDelegateProperty* Property, UObject* Parent)
 {
 	FunSig = Property->SignatureFunction;
 	TheDelegatePtr = MakeShareable(new FSparseDelegateWrapper(Parent, Property));
@@ -96,7 +96,7 @@ void ULuaDelegateMulti::Fire(lua_State* inL)
 		int ArgCount = lua_gettop(inL);
 
 		// Iterate over input parameters
-		for (TFieldIterator<UProperty> It(Function); It && (It->GetPropertyFlags() & (CPF_Parm)); ++It)
+		for (TFieldIterator<FProperty> It(Function); It && (It->GetPropertyFlags() & (CPF_Parm)); ++It)
 		{
 			auto Prop = *It;
 			if (ArgIndex <= ArgCount)

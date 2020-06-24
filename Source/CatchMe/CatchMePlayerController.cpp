@@ -3,7 +3,7 @@
 #include "CatchMePlayerController.h"
 #include "NavigationSystem.h"
 #include "Runtime/Engine/Classes/Components/DecalComponent.h"
-#include "Kismet/HeadMountedDisplayFunctionLibrary.h"
+#include "HeadMountedDisplay/Public/HeadMountedDisplayFunctionLibrary.h"
 #include "UnrealLua.h"
 #include "luautils.h"
 #include "TestCaseActor.h"
@@ -28,8 +28,8 @@ void ACatchMePlayerController::GetLifetimeReplicatedProps(TArray< FLifetimePrope
 	auto result = LuaStaticCallr(TArray<FReplifetimeCond>, "CMPlayerController_GetLifetimeReplicatedProps", this);
 	for (auto &v : result)
 	{
-// 		UProperty* p = UTableUtil::GetPropertyByName(ACatchMePlayerController::StaticClass(), v.PropertyName);
-		UProperty* p = ACatchMePlayerController::StaticClass()->FindPropertyByName(FName(*v.PropertyName));
+// 		FProperty* p = UTableUtil::GetPropertyByName(ACatchMePlayerController::StaticClass(), v.PropertyName);
+		FProperty* p = ACatchMePlayerController::StaticClass()->FindPropertyByName(FName(*v.PropertyName));
 		for (int32 i = 0; i < p->ArrayDim; i++)
 		{
 			OutLifetimeProps.AddUnique(FLifetimeProperty(p->RepIndex + i, v.Cond));

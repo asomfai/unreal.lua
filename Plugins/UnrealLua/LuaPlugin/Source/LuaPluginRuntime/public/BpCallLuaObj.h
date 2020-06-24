@@ -26,7 +26,7 @@ public:
 	inline static void push_and_call(int32 ParamCount, int32 ReturnCount, FFrame& Stack)
 	{
 		P_GET_OBJECT(UObject, Z_Param_Ins);
-		P_GET_PROPERTY(UStrProperty, Z_Param_FunctionName);
+		P_GET_PROPERTY(FStrProperty, Z_Param_FunctionName);
 
 		P_NATIVE_BEGIN;
 		// lua_State* L = UTableUtil::GetTheOnlyLuaState();
@@ -44,8 +44,8 @@ public:
 				if (Stack.PeekCode() != 0x17)
 				{
 					Stack.MostRecentProperty = nullptr;
-					Stack.StepCompiledIn<UProperty>(NULL);
-					UProperty* ParamProperty = Stack.MostRecentProperty;
+					Stack.StepCompiledIn<FProperty>(NULL);
+					FProperty* ParamProperty = Stack.MostRecentProperty;
 					UTableUtil::pushproperty_valueptr(L, ParamProperty, Stack.MostRecentPropertyAddress);
 				}
 				// self	
@@ -53,7 +53,7 @@ public:
 				{
 					Stack.MostRecentProperty = nullptr;
 					UObject* self = nullptr;
-					Stack.StepCompiledIn<UProperty>(&self);
+					Stack.StepCompiledIn<FProperty>(&self);
 					UTableUtil::push(L, self);
 				}
 			}
@@ -76,8 +76,8 @@ public:
 				if (Stack.PeekCode() != 0x17)
 				{
 					Stack.MostRecentProperty = nullptr;
-					Stack.StepCompiledIn<UProperty>(NULL);
-					UProperty* ParamProperty = Stack.MostRecentProperty;
+					Stack.StepCompiledIn<FProperty>(NULL);
+					FProperty* ParamProperty = Stack.MostRecentProperty;
 					UTableUtil::pushproperty_valueptr(L, ParamProperty, Stack.MostRecentPropertyAddress);
 				}
 				// self	
@@ -85,7 +85,7 @@ public:
 				{
 					Stack.MostRecentProperty = nullptr;
 					UObject* self = nullptr;
-					Stack.StepCompiledIn<UProperty>(&self);
+					Stack.StepCompiledIn<FProperty>(&self);
 					UTableUtil::push(L, self);
 				}
 			}
@@ -102,9 +102,9 @@ public:
 		for (int i = 0; i < ReturnCount; i++)
 		{
 			Stack.MostRecentProperty = nullptr;
-			Stack.StepCompiledIn<UProperty>(NULL);
+			Stack.StepCompiledIn<FProperty>(NULL);
 
-			UProperty* ReturnProperty = Stack.MostRecentProperty;
+			FProperty* ReturnProperty = Stack.MostRecentProperty;
 			UTableUtil::popproperty(L, i-ReturnCount, ReturnProperty, Stack.Locals);
 		}
 		lua_pop(L, (1 + ReturnCount));

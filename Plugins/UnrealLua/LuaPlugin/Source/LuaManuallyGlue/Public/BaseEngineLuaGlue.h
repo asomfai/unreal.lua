@@ -156,7 +156,45 @@ LUA_GLUE_FUNCTION(FindFilesRecursive)
 LUA_GLUE_FUNCTION(GetTimeStamp)
 LUA_GLUE_END()
 
-LUA_GLUE_BEGIN_NAME(FFileHelper, FFileHelper)
+class FFileHelperProxy
+{
+public:
+  /**
+   * Load a text file to an FString. Supports all combination of ANSI/Unicode files and platforms.
+   *
+   * @param Result       String representation of the loaded file
+   * @param Filename     Name of the file to load
+   * @param VerifyFlags  Flags controlling the hash verification behavior ( see EHashOptions )
+   */
+  static bool LoadFileToString(FString& Result, const TCHAR* Filename, FFileHelper::EHashOptions VerifyFlags = FFileHelper::EHashOptions::None, uint32 ReadFlags = 0)
+  {
+    return FFileHelper::LoadFileToString(Result, Filename, VerifyFlags, ReadFlags);
+  }
+
+  /**
+   * Write the FString to a file.
+   * Supports all combination of ANSI/Unicode files and platforms.
+   */
+  static bool SaveStringToFile(const FString& String, const TCHAR* Filename, FFileHelper::EEncodingOptions EncodingOptions = FFileHelper::EEncodingOptions::AutoDetect, IFileManager* FileManager = &IFileManager::Get(), uint32 WriteFlags = 0)
+  {
+    return FFileHelper::SaveStringToFile(String, Filename, EncodingOptions , FileManager , WriteFlags );
+  }
+
+  /**
+   * Load a binary file to a dynamic array with two uninitialized bytes at end as padding.
+   *
+   * @param Result    Receives the contents of the file
+   * @param Filename  The file to read
+   * @param Flags     Flags to pass to IFileManager::CreateFileReader
+  */
+ static bool LoadFileToArray(TArray<uint8>& Result, const TCHAR* Filename, uint32 Flags = 0)
+  {
+    return FFileHelper::LoadFileToArray(Result, Filename, Flags);
+  }
+
+};
+
+LUA_GLUE_BEGIN_NAME(FFileHelper, FFileHelperProxy)
 LUA_GLUE_FUNCTION(LoadFileToString)
 LUA_GLUE_FUNCTION(SaveStringToFile)
 LUA_GLUE_FUNCTION(LoadFileToArray, 0)

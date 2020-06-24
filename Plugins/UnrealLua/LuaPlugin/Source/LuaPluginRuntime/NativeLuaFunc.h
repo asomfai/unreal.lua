@@ -257,7 +257,7 @@ int32 index_reflection_uobject_func_withexpand(lua_State* inL)
 		return 1;
 	}
 
-	UProperty* Property = Class->FindPropertyByName(*OriginKey);
+	FProperty* Property = Class->FindPropertyByName(*OriginKey);
 	if (Property)
 	{
 		void* PropertyInterface = UTableUtil::GetBpPropertyInterface(inL, Property);
@@ -318,7 +318,7 @@ int32 newindex_reflection_uobject_func_withexpand(lua_State* inL)
 	}
 #endif
 	UClass* Class = p->GetClass();
-	UProperty* Property = Class->FindPropertyByName(UTF8_TO_TCHAR(lua_tostring(inL, 2)));
+	FProperty* Property = Class->FindPropertyByName(UTF8_TO_TCHAR(lua_tostring(inL, 2)));
 	if (Property)
 	{
 		void* PropertyInterface = UTableUtil::GetBpPropertyInterface(inL, Property);
@@ -372,7 +372,7 @@ int32 try_newindex_reflection_uobject_func_withexpand(lua_State* inL)
 
 	UObject* p = (UObject*)tovoid(inL, 1);
 	UClass* Class = p->GetClass();
-	UProperty* Property = Class->FindPropertyByName(UTF8_TO_TCHAR(lua_tostring(inL, 2)));
+	FProperty* Property = Class->FindPropertyByName(UTF8_TO_TCHAR(lua_tostring(inL, 2)));
 	if (Property)
 	{
 		void* PropertyInterface = UTableUtil::GetBpPropertyInterface(inL, Property);
@@ -567,7 +567,7 @@ int32 index_struct_func_with_class_with_glue(lua_State* inL)
 		lua_pushvalue(inL, lua_upvalueindex(3));
 		void** p = (void**)lua_touserdata(inL, -1);
 		UScriptStruct* Class = (UScriptStruct*)(*p);
-		UProperty* Property = Class->FindPropertyByName(UTF8_TO_TCHAR(lua_tostring(inL, 2)));
+		FProperty* Property = Class->FindPropertyByName(UTF8_TO_TCHAR(lua_tostring(inL, 2)));
 		if (Property)
 		{
 			void* PropertyInterface = UTableUtil::GetBpPropertyInterface(inL, Property);
@@ -657,7 +657,7 @@ int32 newindex_struct_Func_with_class_with_glue(lua_State* inL)
 	
 	void** p = (void**)lua_touserdata(inL, -1);
 	UScriptStruct* Class = (UScriptStruct*)(*p);
-	UProperty* Property = Class->FindPropertyByName(UTF8_TO_TCHAR(lua_tostring(inL, 2)));
+	FProperty* Property = Class->FindPropertyByName(UTF8_TO_TCHAR(lua_tostring(inL, 2)));
 	if (Property)
 	{
 		void* PropertyInterface = UTableUtil::GetBpPropertyInterface(inL, Property);
@@ -962,37 +962,37 @@ int ErrHandleFunc(lua_State*L)
 #define BpSetterAndGetter(PropertyType) BpPropertyGetSet(PropertyType) \
 										BpStructPropertyGetSet(PropertyType)
 
-BpSetterAndGetter(UBoolProperty)
-BpSetterAndGetter(UIntProperty)
-BpSetterAndGetter(UInt8Property)
-BpSetterAndGetter(UUInt16Property)
-BpSetterAndGetter(UInt16Property)
-BpSetterAndGetter(UUInt32Property)
-BpSetterAndGetter(UInt64Property)
-BpSetterAndGetter(UUInt64Property)
-BpSetterAndGetter(UFloatProperty)
-BpSetterAndGetter(UDoubleProperty)
-BpSetterAndGetter(UObjectPropertyBase)
-BpSetterAndGetter(UObjectProperty)
-BpSetterAndGetter(UClassProperty)
-BpSetterAndGetter(UStrProperty)
-BpSetterAndGetter(UNameProperty)
-BpSetterAndGetter(UTextProperty)
-BpSetterAndGetter(UByteProperty)
-BpSetterAndGetter(UEnumProperty)
-BpSetterAndGetter(UStructProperty)
+BpSetterAndGetter(FBoolProperty)
+BpSetterAndGetter(FIntProperty)
+BpSetterAndGetter(FInt8Property)
+BpSetterAndGetter(FUInt16Property)
+BpSetterAndGetter(FInt16Property)
+BpSetterAndGetter(FUInt32Property)
+BpSetterAndGetter(FInt64Property)
+BpSetterAndGetter(FUInt64Property)
+BpSetterAndGetter(FFloatProperty)
+BpSetterAndGetter(FDoubleProperty)
+BpSetterAndGetter(FObjectPropertyBase)
+BpSetterAndGetter(FObjectProperty)
+BpSetterAndGetter(FClassProperty)
+BpSetterAndGetter(FStrProperty)
+BpSetterAndGetter(FNameProperty)
+BpSetterAndGetter(FTextProperty)
+BpSetterAndGetter(FByteProperty)
+BpSetterAndGetter(FEnumProperty)
+BpSetterAndGetter(FStructProperty)
 #if ENGINE_MINOR_VERSION >= 23
-BpSetterAndGetter(UMulticastInlineDelegateProperty)
-BpSetterAndGetter(UMulticastSparseDelegateProperty)
+BpSetterAndGetter(FMulticastInlineDelegateProperty)
+BpSetterAndGetter(FMulticastSparseDelegateProperty)
 #else
-BpSetterAndGetter(UMulticastDelegateProperty)
+BpSetterAndGetter(FMulticastDelegateProperty)
 #endif
-BpSetterAndGetter(UDelegateProperty)
-BpSetterAndGetter(UWeakObjectProperty)
-BpSetterAndGetter(UArrayProperty)
-BpSetterAndGetter(UMapProperty)
-BpSetterAndGetter(USetProperty)
-BpSetterAndGetter(UInterfaceProperty)
+BpSetterAndGetter(FDelegateProperty)
+BpSetterAndGetter(FWeakObjectProperty)
+BpSetterAndGetter(FArrayProperty)
+BpSetterAndGetter(FMapProperty)
+BpSetterAndGetter(FSetProperty)
+BpSetterAndGetter(FInterfaceProperty)
 
 
 static int32 GetBpClass(lua_State* inL)
@@ -1006,7 +1006,7 @@ static int32 GetBpClass(lua_State* inL)
 static int32 BpStructGetProp(lua_State* inL)
 {
 	void** p = (void**)lua_touserdata(inL, lua_upvalueindex(1));
-	UProperty* Property = (UProperty*)(*p);
+	FProperty* Property = (FProperty*)(*p);
 	UTableUtil::pushproperty(inL, Property, tostruct(inL, 1));
 	return 1;
 }
@@ -1014,7 +1014,7 @@ static int32 BpStructGetProp(lua_State* inL)
 static int32 BpStructSetProp(lua_State* inL)
 {
 	void** p = (void**)lua_touserdata(inL, lua_upvalueindex(1));
-	UProperty* Property = (UProperty*)(*p);
+	FProperty* Property = (FProperty*)(*p);
 	UTableUtil::popproperty(inL, 2, Property, tostruct(inL, 1));
 	return 0;
 }
@@ -1218,9 +1218,9 @@ static int32 GetUObjectAllProperty(lua_State* inL)
 	UObject* Obj = (UObject*)tovoid(inL, 1);
 	UClass* Class = Obj->GetClass();
 	lua_newtable(inL);
-	for (TFieldIterator<UProperty> PropertyIt(Class); PropertyIt; ++PropertyIt)
+	for (TFieldIterator<FProperty> PropertyIt(Class); PropertyIt; ++PropertyIt)
 	{
-		UProperty* Property = *PropertyIt;
+		FProperty* Property = *PropertyIt;
 		UTableUtil::push(inL, Property->GetName());
 		UTableUtil::pushproperty(inL, Property, (void*)Obj);
 		lua_rawset(inL, -3);

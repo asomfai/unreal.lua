@@ -31,8 +31,8 @@ void ACatchMeCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > &
 // 	auto result = LuaStaticCallr(TArray<FReplifetimeCond>, "CatchMeCharacter_GetLifetimeReplicatedProps", this);
 // 	for (auto &v : result)
 // 	{
-// // 		UProperty* p = UTableUtil::GetPropertyByName(ACatchMeCharacter::StaticClass(), v.PropertyName);
-// 		UProperty* p = ACatchMeCharacter::StaticClass()->FindPropertyByName(FName(*v.PropertyName));
+// // 		FProperty* p = UTableUtil::GetPropertyByName(ACatchMeCharacter::StaticClass(), v.PropertyName);
+// 		FProperty* p = ACatchMeCharacter::StaticClass()->FindPropertyByName(FName(*v.PropertyName));
 // 		for (int32 i = 0; i < p->ArrayDim; i++)
 // 		{
 // 			OutLifetimeProps.AddUnique(FLifetimeProperty(p->RepIndex + i, v.Cond));

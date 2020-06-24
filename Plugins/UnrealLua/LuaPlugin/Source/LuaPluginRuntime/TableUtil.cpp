@@ -32,15 +32,15 @@ DEFINE_LOG_CATEGORY(LuaLog);
 											lua_pushcclosure(inL, Func, 1);\
 											lua_rawset(inL, index)
 
-FORCEINLINE uint64 GetPropertyFlag(UProperty* Property)
+FORCEINLINE uint64 GetPropertyFlag(FProperty* Property)
 {
-	UClass* PropertyClass = Property->GetClass();
-	uint64 CastFlag = uint64(PropertyClass->ClassCastFlags);
-	CastFlag = CastFlag & (CASTCLASS_UByteProperty | CASTCLASS_UIntProperty | CASTCLASS_UInt8Property
-		| CASTCLASS_UUInt64Property | CASTCLASS_UUInt32Property | CASTCLASS_UUInt16Property
-		| CASTCLASS_UInt64Property | CASTCLASS_UInt16Property | CASTCLASS_UBoolProperty
-		| CASTCLASS_UNameProperty | CASTCLASS_UStrProperty | CASTCLASS_UTextProperty
-		| CASTCLASS_UDoubleProperty | CASTCLASS_UFloatProperty | CASTCLASS_UObjectProperty | CASTCLASS_UStructProperty);
+  FFieldClass* PropertyClass = Property->GetClass();
+	uint64 CastFlag = uint64(PropertyClass->GetCastFlags());
+	CastFlag = CastFlag & (CASTCLASS_FByteProperty | CASTCLASS_FIntProperty | CASTCLASS_FInt8Property
+		| CASTCLASS_FUInt64Property | CASTCLASS_FUInt32Property | CASTCLASS_FUInt16Property
+		| CASTCLASS_FInt64Property | CASTCLASS_FInt16Property | CASTCLASS_FBoolProperty
+		| CASTCLASS_FNameProperty | CASTCLASS_FStrProperty | CASTCLASS_FTextProperty
+		| CASTCLASS_FDoubleProperty | CASTCLASS_FFloatProperty | CASTCLASS_FObjectProperty | CASTCLASS_FStructProperty);
 	return CastFlag;
 }
 
@@ -120,8 +120,8 @@ TMap<FString, TArray<FString>> UTableUtil::ClassBaseClass;
 TMap<FString, TMap<FString, UnrealLuaBlueFunc>>  UTableUtil::UserDefineGlue;
 TMap<FString, TMap<FString, UnrealLuaBlueFunc>> UTableUtil::ExpandClassGlue;
 TMap<FString, TArray<EnumGlueStruct> > UTableUtil::ManualEnumGlue;
-TMap<UClass*, TFunction<void(lua_State*, UProperty*, const void*)> > UTableUtil::PropertyClassToPushFuncMap;
-TMap<UClass*, TFunction<void(lua_State*, int, UProperty*, void*)> > UTableUtil::PropertyClassToPopFuncMap;
+TMap<FFieldClass*, TFunction<void(lua_State*, FProperty*, const void*)> > UTableUtil::PropertyClassToPushFuncMap;
+TMap<FFieldClass*, TFunction<void(lua_State*, int, FProperty*, void*)> > UTableUtil::PropertyClassToPopFuncMap;
 
 
 #define MAP_PROPERTY_PUSH_AND_POP_FUNC(PropertyType) PropertyClassToPushFuncMap.Add(PropertyType::StaticClass(), pushproperty_##PropertyType);\
@@ -194,37 +194,37 @@ void UTableUtil::useCustomLoader(UObject *inL)
 
 void UTableUtil::MapPropertyToPushPopFunction()
 {
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(UBoolProperty)
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(UIntProperty)
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(UInt8Property)
-		MAP_PROPERTY_PUSH_AND_POP_FUNC(UUInt16Property)
-		MAP_PROPERTY_PUSH_AND_POP_FUNC(UInt16Property)
-		MAP_PROPERTY_PUSH_AND_POP_FUNC(UUInt32Property)
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(UInt64Property)
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(UUInt64Property)
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(UFloatProperty)
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(UDoubleProperty)
-		MAP_PROPERTY_PUSH_AND_POP_FUNC(UObjectPropertyBase)
-		MAP_PROPERTY_PUSH_AND_POP_FUNC(UObjectProperty)
-		MAP_PROPERTY_PUSH_AND_POP_FUNC(UClassProperty)
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(UStrProperty)
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(UNameProperty)
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(UTextProperty)
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(UByteProperty)
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(UEnumProperty)
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(UStructProperty)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FBoolProperty)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FIntProperty)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FInt8Property)
+		MAP_PROPERTY_PUSH_AND_POP_FUNC(FUInt16Property)
+		MAP_PROPERTY_PUSH_AND_POP_FUNC(FInt16Property)
+		MAP_PROPERTY_PUSH_AND_POP_FUNC(FUInt32Property)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FInt64Property)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FUInt64Property)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FFloatProperty)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FDoubleProperty)
+		MAP_PROPERTY_PUSH_AND_POP_FUNC(FObjectPropertyBase)
+		MAP_PROPERTY_PUSH_AND_POP_FUNC(FObjectProperty)
+		MAP_PROPERTY_PUSH_AND_POP_FUNC(FClassProperty)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FStrProperty)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FNameProperty)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FTextProperty)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FByteProperty)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FEnumProperty)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FStructProperty)
 #if ENGINE_MINOR_VERSION >= 23
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(UMulticastInlineDelegateProperty)
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(UMulticastSparseDelegateProperty)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FMulticastInlineDelegateProperty)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FMulticastSparseDelegateProperty)
 #else
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(UMulticastDelegateProperty)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FMulticastDelegateProperty)
 #endif
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(UDelegateProperty)
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(UWeakObjectProperty)
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(UArrayProperty)
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(UMapProperty)
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(USetProperty)
-	MAP_PROPERTY_PUSH_AND_POP_FUNC(UInterfaceProperty)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FDelegateProperty)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FWeakObjectProperty)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FArrayProperty)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FMapProperty)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FSetProperty)
+	MAP_PROPERTY_PUSH_AND_POP_FUNC(FInterfaceProperty)
 }
 
 void UTableUtil::PowerTheState(lua_State* inL)
@@ -331,7 +331,7 @@ void UTableUtil::ShutdownTheState(lua_State* inL)
 #endif
 }
 
-struct LuaBaseBpInterface* UTableUtil::GetBpPropertyInterface(lua_State*inL, UProperty* BpField)
+struct LuaBaseBpInterface* UTableUtil::GetBpPropertyInterface(lua_State*inL, FProperty* BpField)
 {
 	lua_State* MainState = GetMainThread(inL);
 	TArray<LuaBaseBpInterface*>& StatesInterface = ExistBpInterfaceForState.FindOrAdd(MainState);
@@ -466,9 +466,9 @@ void UTableUtil::init_refelction_native_uclass_meta(lua_State* inL, const char* 
 	lua_newtable(inL);
 	CopyTableForLua(inL);
 	auto AddGetBpProperty = [&]() {
-		for (TFieldIterator<UProperty> PropertyIt(Class); PropertyIt; ++PropertyIt)
+		for (TFieldIterator<FProperty> PropertyIt(Class); PropertyIt; ++PropertyIt)
 		{
-			UProperty* Property = *PropertyIt;
+			FProperty* Property = *PropertyIt;
 			FString PropertyName = Property->GetName();
 			void* LuaProperty = GetBpPropertyInterface(inL, Property);
 			auto SetFunc = [=](const FString& Name, int TableIndex)
@@ -476,53 +476,53 @@ void UTableUtil::init_refelction_native_uclass_meta(lua_State* inL, const char* 
 				bool bPushFunction = false;
 				push(inL, Name);
 				lua_pushlightuserdata(inL, LuaProperty);
-				if (Property->IsA(UBoolProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UBoolProperty), 1);
-				else if (Property->IsA(UIntProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UIntProperty), 1);
-				else if (Property->IsA(UInt8Property::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UInt8Property), 1);
-				else if (Property->IsA(UUInt16Property::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UUInt16Property), 1);
-				else if (Property->IsA(UInt16Property::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UInt16Property), 1);
-				else if (Property->IsA(UUInt32Property::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UUInt32Property), 1);
-				else if (Property->IsA(UInt64Property::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UInt64Property), 1);
-				else if (Property->IsA(UUInt64Property::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UUInt64Property), 1);
-				else if (Property->IsA(UFloatProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UFloatProperty), 1);
-				else if (Property->IsA(UDoubleProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UDoubleProperty), 1);
-				else if (Property->IsA(UObjectPropertyBase::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UObjectPropertyBase), 1);
-				else if (Property->IsA(UObjectProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UObjectProperty), 1);
-				else if (Property->IsA(UClassProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UClassProperty), 1);
-				else if (Property->IsA(UStrProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UStrProperty), 1);
-				else if (Property->IsA(UNameProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UNameProperty), 1);
-				else if (Property->IsA(UTextProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UTextProperty), 1);
-				else if (Property->IsA(UByteProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UByteProperty), 1);
-				else if (Property->IsA(UEnumProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UEnumProperty), 1);
-				else if (Property->IsA(UStructProperty::StaticClass()))
+				if (Property->IsA(FBoolProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FBoolProperty), 1);
+				else if (Property->IsA(FIntProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FIntProperty), 1);
+				else if (Property->IsA(FInt8Property::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FInt8Property), 1);
+				else if (Property->IsA(FUInt16Property::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FUInt16Property), 1);
+				else if (Property->IsA(FInt16Property::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FInt16Property), 1);
+				else if (Property->IsA(FUInt32Property::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FUInt32Property), 1);
+				else if (Property->IsA(FInt64Property::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FInt64Property), 1);
+				else if (Property->IsA(FUInt64Property::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FUInt64Property), 1);
+				else if (Property->IsA(FFloatProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FFloatProperty), 1);
+				else if (Property->IsA(FDoubleProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FDoubleProperty), 1);
+				else if (Property->IsA(FObjectPropertyBase::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FObjectPropertyBase), 1);
+				else if (Property->IsA(FObjectProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FObjectProperty), 1);
+				else if (Property->IsA(FClassProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FClassProperty), 1);
+				else if (Property->IsA(FStrProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FStrProperty), 1);
+				else if (Property->IsA(FNameProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FNameProperty), 1);
+				else if (Property->IsA(FTextProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FTextProperty), 1);
+				else if (Property->IsA(FByteProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FByteProperty), 1);
+				else if (Property->IsA(FEnumProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FEnumProperty), 1);
+				else if (Property->IsA(FStructProperty::StaticClass()))
 				{
 					lua_newtable(inL);
 					lua_newtable(inL);
 					lua_pushstring(inL, "k");
 					lua_setfield(inL, -2, "__mode");
 					lua_setmetatable(inL, -2);
-					lua_pushcclosure(inL, BpPropertyGetterName(UStructProperty), 2);
+					lua_pushcclosure(inL, BpPropertyGetterName(FStructProperty), 2);
 					bPushFunction = true;
 				}
-				else if (Property->IsA(UMulticastDelegateProperty::StaticClass())) 
+				else if (Property->IsA(FMulticastDelegateProperty::StaticClass())) 
 				{
 					lua_newtable(inL);
 					lua_newtable(inL);
@@ -530,35 +530,35 @@ void UTableUtil::init_refelction_native_uclass_meta(lua_State* inL, const char* 
 					lua_setfield(inL, -2, "__mode");
 					lua_setmetatable(inL, -2);
 #if ENGINE_MINOR_VERSION >= 23
-					if(Property->IsA(UMulticastInlineDelegateProperty::StaticClass()))
-						lua_pushcclosure(inL, BpPropertyGetterName(UMulticastInlineDelegateProperty), 2);
+					if(Property->IsA(FMulticastInlineDelegateProperty::StaticClass()))
+						lua_pushcclosure(inL, BpPropertyGetterName(FMulticastInlineDelegateProperty), 2);
 					else
-						lua_pushcclosure(inL, BpPropertyGetterName(UMulticastSparseDelegateProperty), 2);
+						lua_pushcclosure(inL, BpPropertyGetterName(FMulticastSparseDelegateProperty), 2);
 #else
-					lua_pushcclosure(inL, BpPropertyGetterName(UMulticastDelegateProperty), 2);
+					lua_pushcclosure(inL, BpPropertyGetterName(FMulticastDelegateProperty), 2);
 #endif
 					bPushFunction = true;
 				}
-				else if (Property->IsA(UDelegateProperty::StaticClass()))
+				else if (Property->IsA(FDelegateProperty::StaticClass()))
 				{
 					lua_newtable(inL);
 					lua_newtable(inL);
 					lua_pushstring(inL, "k");
 					lua_setfield(inL, -2, "__mode");
 					lua_setmetatable(inL, -2);
-					lua_pushcclosure(inL, BpPropertyGetterName(UDelegateProperty), 2);
+					lua_pushcclosure(inL, BpPropertyGetterName(FDelegateProperty), 2);
 					bPushFunction = true;
 				}
-				else if (Property->IsA(UWeakObjectProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UWeakObjectProperty), 1);
-				else if (Property->IsA(UArrayProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UArrayProperty), 1);
-				else if (Property->IsA(UMapProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UMapProperty), 1);
-				else if (Property->IsA(USetProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(USetProperty), 1);
-				else if (Property->IsA(UInterfaceProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertyGetterName(UInterfaceProperty), 1);
+				else if (Property->IsA(FWeakObjectProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FWeakObjectProperty), 1);
+				else if (Property->IsA(FArrayProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FArrayProperty), 1);
+				else if (Property->IsA(FMapProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FMapProperty), 1);
+				else if (Property->IsA(FSetProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FSetProperty), 1);
+				else if (Property->IsA(FInterfaceProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertyGetterName(FInterfaceProperty), 1);
 				else
 				{
 					ensureAlwaysMsgf(0, TEXT("Bug"));
@@ -654,9 +654,9 @@ void UTableUtil::init_refelction_native_uclass_meta(lua_State* inL, const char* 
 
 	lua_newtable(inL);
 	auto AddSetBpProperty = [&]() {
-		for (TFieldIterator<UProperty> PropertyIt(Class); PropertyIt; ++PropertyIt)
+		for (TFieldIterator<FProperty> PropertyIt(Class); PropertyIt; ++PropertyIt)
 		{
-			UProperty* Property = *PropertyIt;
+			FProperty* Property = *PropertyIt;
 			FString PropertyName = Property->GetName();
 			void* LuaProperty = GetBpPropertyInterface(inL, Property);
 			auto SetFunc = [=](const FString& Name, int TableIndex)
@@ -664,67 +664,67 @@ void UTableUtil::init_refelction_native_uclass_meta(lua_State* inL, const char* 
 				bool bPushFunction = false;
 				push(inL, Name);
 				lua_pushlightuserdata(inL, LuaProperty);
-				if (Property->IsA(UBoolProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UBoolProperty), 1);
-				else if (Property->IsA(UIntProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UIntProperty), 1);
-				else if (Property->IsA(UInt8Property::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UInt8Property), 1);
-				else if (Property->IsA(UUInt16Property::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UUInt16Property), 1);
-				else if (Property->IsA(UInt16Property::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UInt16Property), 1);
-				else if (Property->IsA(UUInt32Property::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UUInt32Property), 1);
-				else if (Property->IsA(UInt64Property::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UInt64Property), 1);
-				else if (Property->IsA(UUInt64Property::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UUInt64Property), 1);
-				else if (Property->IsA(UFloatProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UFloatProperty), 1);
-				else if (Property->IsA(UDoubleProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UDoubleProperty), 1);
-				else if (Property->IsA(UObjectPropertyBase::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UObjectPropertyBase), 1);
-				else if (Property->IsA(UObjectProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UObjectProperty), 1);
-				else if (Property->IsA(UClassProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UClassProperty), 1);
-				else if (Property->IsA(UStrProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UStrProperty), 1);
-				else if (Property->IsA(UNameProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UNameProperty), 1);
-				else if (Property->IsA(UTextProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UTextProperty), 1);
-				else if (Property->IsA(UByteProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UByteProperty), 1);
-				else if (Property->IsA(UEnumProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UEnumProperty), 1);
-				else if (Property->IsA(UStructProperty::StaticClass())) 
-					lua_pushcclosure(inL, BpPropertySetterName(UStructProperty), 1);
-				else if (Property->IsA(UMulticastDelegateProperty::StaticClass()))
+				if (Property->IsA(FBoolProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FBoolProperty), 1);
+				else if (Property->IsA(FIntProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FIntProperty), 1);
+				else if (Property->IsA(FInt8Property::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FInt8Property), 1);
+				else if (Property->IsA(FUInt16Property::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FUInt16Property), 1);
+				else if (Property->IsA(FInt16Property::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FInt16Property), 1);
+				else if (Property->IsA(FUInt32Property::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FUInt32Property), 1);
+				else if (Property->IsA(FInt64Property::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FInt64Property), 1);
+				else if (Property->IsA(FUInt64Property::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FUInt64Property), 1);
+				else if (Property->IsA(FFloatProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FFloatProperty), 1);
+				else if (Property->IsA(FDoubleProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FDoubleProperty), 1);
+				else if (Property->IsA(FObjectPropertyBase::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FObjectPropertyBase), 1);
+				else if (Property->IsA(FObjectProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FObjectProperty), 1);
+				else if (Property->IsA(FClassProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FClassProperty), 1);
+				else if (Property->IsA(FStrProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FStrProperty), 1);
+				else if (Property->IsA(FNameProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FNameProperty), 1);
+				else if (Property->IsA(FTextProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FTextProperty), 1);
+				else if (Property->IsA(FByteProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FByteProperty), 1);
+				else if (Property->IsA(FEnumProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FEnumProperty), 1);
+				else if (Property->IsA(FStructProperty::StaticClass())) 
+					lua_pushcclosure(inL, BpPropertySetterName(FStructProperty), 1);
+				else if (Property->IsA(FMulticastDelegateProperty::StaticClass()))
 				{
 #if ENGINE_MINOR_VERSION >= 23
-					if (Property->IsA(UMulticastInlineDelegateProperty::StaticClass()))
-						lua_pushcclosure(inL, BpPropertySetterName(UMulticastInlineDelegateProperty), 1);
+					if (Property->IsA(FMulticastInlineDelegateProperty::StaticClass()))
+						lua_pushcclosure(inL, BpPropertySetterName(FMulticastInlineDelegateProperty), 1);
 					else
-						lua_pushcclosure(inL, BpPropertySetterName(UMulticastSparseDelegateProperty), 1);
+						lua_pushcclosure(inL, BpPropertySetterName(FMulticastSparseDelegateProperty), 1);
 #else
-					lua_pushcclosure(inL, BpPropertySetterName(UMulticastDelegateProperty), 1);
+					lua_pushcclosure(inL, BpPropertySetterName(FMulticastDelegateProperty), 1);
 #endif
 				}
-				else if (Property->IsA(UDelegateProperty::StaticClass())) 
-					lua_pushcclosure(inL, BpPropertySetterName(UDelegateProperty), 1);
-				else if (Property->IsA(UWeakObjectProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UWeakObjectProperty), 1);
-				else if (Property->IsA(UArrayProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UArrayProperty), 1);
-				else if (Property->IsA(UMapProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UMapProperty), 1);
-				else if (Property->IsA(USetProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(USetProperty), 1);
-				else if (Property->IsA(UInterfaceProperty::StaticClass()))
-					lua_pushcclosure(inL, BpPropertySetterName(UInterfaceProperty), 1);
+				else if (Property->IsA(FDelegateProperty::StaticClass())) 
+					lua_pushcclosure(inL, BpPropertySetterName(FDelegateProperty), 1);
+				else if (Property->IsA(FWeakObjectProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FWeakObjectProperty), 1);
+				else if (Property->IsA(FArrayProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FArrayProperty), 1);
+				else if (Property->IsA(FMapProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FMapProperty), 1);
+				else if (Property->IsA(FSetProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FSetProperty), 1);
+				else if (Property->IsA(FInterfaceProperty::StaticClass()))
+					lua_pushcclosure(inL, BpPropertySetterName(FInterfaceProperty), 1);
 				else
 				{
 					ensureAlwaysMsgf(0, TEXT("Bug"));
@@ -818,7 +818,7 @@ void UTableUtil::init_reflection_struct_meta(lua_State* inL, const char* structn
 		AddFuncToTable(inL, -1, "__gc", struct_gcfunc);
 	}
 
-	auto GetPropertyName = [=](UProperty* Property)
+	auto GetPropertyName = [=](FProperty* Property)
 	{
 		FString PropertyName = Property->GetName();
 		if (IsBpStruct)
@@ -834,77 +834,77 @@ void UTableUtil::init_reflection_struct_meta(lua_State* inL, const char* structn
 	bool HasGlueFunctionForNewIndex = false;
 	lua_newtable(inL);
 	auto AddSetBpProperty = [&]() {
-		for (TFieldIterator<UProperty> PropertyIt(Class); PropertyIt; ++PropertyIt)
+		for (TFieldIterator<FProperty> PropertyIt(Class); PropertyIt; ++PropertyIt)
 		{
 			bool bPushFunction = false;
-			UProperty* Property = *PropertyIt;
+			FProperty* Property = *PropertyIt;
 			FString PropertyName = GetPropertyName(Property);
 			void* LuaProperty = GetBpPropertyInterface(inL, Property);
 			auto SetFunc = [=](const FString& Name, int TableIndex)
 			{
 				push(inL, Name);
 				lua_pushlightuserdata(inL, LuaProperty);
-				if (Property->IsA(UBoolProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UBoolProperty), 1);
-				else if (Property->IsA(UIntProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UIntProperty), 1);
-				else if (Property->IsA(UInt8Property::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UInt8Property), 1);
-				else if (Property->IsA(UUInt16Property::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UUInt16Property), 1);
-				else if (Property->IsA(UInt16Property::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UInt16Property), 1);
-				else if (Property->IsA(UUInt32Property::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UUInt32Property), 1);
-				else if (Property->IsA(UInt64Property::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UInt64Property), 1);
-				else if (Property->IsA(UUInt64Property::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UUInt64Property), 1);
-				else if (Property->IsA(UFloatProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UFloatProperty), 1);
-				else if (Property->IsA(UDoubleProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UDoubleProperty), 1);
-				else if (Property->IsA(UObjectPropertyBase::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UObjectPropertyBase), 1);
-				else if (Property->IsA(UObjectProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UObjectProperty), 1);
-				else if (Property->IsA(UClassProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UClassProperty), 1);
-				else if (Property->IsA(UStrProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UStrProperty), 1);
-				else if (Property->IsA(UNameProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UNameProperty), 1);
-				else if (Property->IsA(UTextProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UTextProperty), 1);
-				else if (Property->IsA(UByteProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UByteProperty), 1);
-				else if (Property->IsA(UEnumProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UEnumProperty), 1);
-				else if (Property->IsA(UStructProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UStructProperty), 1);
-				else if (Property->IsA(UMulticastDelegateProperty::StaticClass()))
+				if (Property->IsA(FBoolProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FBoolProperty), 1);
+				else if (Property->IsA(FIntProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FIntProperty), 1);
+				else if (Property->IsA(FInt8Property::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FInt8Property), 1);
+				else if (Property->IsA(FUInt16Property::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FUInt16Property), 1);
+				else if (Property->IsA(FInt16Property::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FInt16Property), 1);
+				else if (Property->IsA(FUInt32Property::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FUInt32Property), 1);
+				else if (Property->IsA(FInt64Property::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FInt64Property), 1);
+				else if (Property->IsA(FUInt64Property::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FUInt64Property), 1);
+				else if (Property->IsA(FFloatProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FFloatProperty), 1);
+				else if (Property->IsA(FDoubleProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FDoubleProperty), 1);
+				else if (Property->IsA(FObjectPropertyBase::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FObjectPropertyBase), 1);
+				else if (Property->IsA(FObjectProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FObjectProperty), 1);
+				else if (Property->IsA(FClassProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FClassProperty), 1);
+				else if (Property->IsA(FStrProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FStrProperty), 1);
+				else if (Property->IsA(FNameProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FNameProperty), 1);
+				else if (Property->IsA(FTextProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FTextProperty), 1);
+				else if (Property->IsA(FByteProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FByteProperty), 1);
+				else if (Property->IsA(FEnumProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FEnumProperty), 1);
+				else if (Property->IsA(FStructProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FStructProperty), 1);
+				else if (Property->IsA(FMulticastDelegateProperty::StaticClass()))
 				{
 #if ENGINE_MINOR_VERSION >= 23
-					if (Property->IsA(UMulticastInlineDelegateProperty::StaticClass()))
-						lua_pushcclosure(inL, BpStructPropertySetterName(UMulticastInlineDelegateProperty), 1);
+					if (Property->IsA(FMulticastInlineDelegateProperty::StaticClass()))
+						lua_pushcclosure(inL, BpStructPropertySetterName(FMulticastInlineDelegateProperty), 1);
 					else
-						lua_pushcclosure(inL, BpStructPropertySetterName(UMulticastSparseDelegateProperty), 1);
+						lua_pushcclosure(inL, BpStructPropertySetterName(FMulticastSparseDelegateProperty), 1);
 #else
-					lua_pushcclosure(inL, BpStructPropertySetterName(UMulticastDelegateProperty), 1);
+					lua_pushcclosure(inL, BpStructPropertySetterName(FMulticastDelegateProperty), 1);
 #endif
 				}
-				else if (Property->IsA(UDelegateProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UDelegateProperty), 1);
-				else if (Property->IsA(UWeakObjectProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UWeakObjectProperty), 1);
-				else if (Property->IsA(UArrayProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UArrayProperty), 1);
-				else if (Property->IsA(UMapProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UMapProperty), 1);
-				else if (Property->IsA(USetProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(USetProperty), 1);
-				else if (Property->IsA(UInterfaceProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertySetterName(UInterfaceProperty), 1);
+				else if (Property->IsA(FDelegateProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FDelegateProperty), 1);
+				else if (Property->IsA(FWeakObjectProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FWeakObjectProperty), 1);
+				else if (Property->IsA(FArrayProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FArrayProperty), 1);
+				else if (Property->IsA(FMapProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FMapProperty), 1);
+				else if (Property->IsA(FSetProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FSetProperty), 1);
+				else if (Property->IsA(FInterfaceProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertySetterName(FInterfaceProperty), 1);
 				else
 				{
 					ensureAlwaysMsgf(0, TEXT("Bug"));
@@ -980,9 +980,9 @@ void UTableUtil::init_reflection_struct_meta(lua_State* inL, const char* structn
 	lua_newtable(inL);
 	CopyTableForLua(inL);
 	auto AddGetBpProperty = [&]() {
-		for (TFieldIterator<UProperty> PropertyIt(Class); PropertyIt; ++PropertyIt)
+		for (TFieldIterator<FProperty> PropertyIt(Class); PropertyIt; ++PropertyIt)
 		{
-			UProperty* Property = *PropertyIt;
+			FProperty* Property = *PropertyIt;
 			FString PropertyName = GetPropertyName(Property);
 			void* LuaProperty = GetBpPropertyInterface(inL, Property);
 			auto SetFunc = [=](const FString& Name, int TableIndex)
@@ -990,53 +990,53 @@ void UTableUtil::init_reflection_struct_meta(lua_State* inL, const char* structn
 				bool bPushFunction = false;
 				push(inL, Name);
 				lua_pushlightuserdata(inL, LuaProperty);
-				if (Property->IsA(UBoolProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UBoolProperty), 1);
-				else if (Property->IsA(UIntProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UIntProperty), 1);
-				else if (Property->IsA(UInt8Property::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UInt8Property), 1);
-				else if (Property->IsA(UUInt16Property::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UUInt16Property), 1);
-				else if (Property->IsA(UInt16Property::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UInt16Property), 1);
-				else if (Property->IsA(UUInt32Property::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UUInt32Property), 1);
-				else if (Property->IsA(UInt64Property::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UInt64Property), 1);
-				else if (Property->IsA(UUInt64Property::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UUInt64Property), 1);
-				else if (Property->IsA(UFloatProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UFloatProperty), 1);
-				else if (Property->IsA(UDoubleProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UDoubleProperty), 1);
-				else if (Property->IsA(UObjectPropertyBase::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UObjectPropertyBase), 1);
-				else if (Property->IsA(UObjectProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UObjectProperty), 1);
-				else if (Property->IsA(UClassProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UClassProperty), 1);
-				else if (Property->IsA(UStrProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UStrProperty), 1);
-				else if (Property->IsA(UNameProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UNameProperty), 1);
-				else if (Property->IsA(UTextProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UTextProperty), 1);
-				else if (Property->IsA(UByteProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UByteProperty), 1);
-				else if (Property->IsA(UEnumProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UEnumProperty), 1);
-				else if (Property->IsA(UStructProperty::StaticClass()))
+				if (Property->IsA(FBoolProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FBoolProperty), 1);
+				else if (Property->IsA(FIntProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FIntProperty), 1);
+				else if (Property->IsA(FInt8Property::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FInt8Property), 1);
+				else if (Property->IsA(FUInt16Property::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FUInt16Property), 1);
+				else if (Property->IsA(FInt16Property::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FInt16Property), 1);
+				else if (Property->IsA(FUInt32Property::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FUInt32Property), 1);
+				else if (Property->IsA(FInt64Property::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FInt64Property), 1);
+				else if (Property->IsA(FUInt64Property::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FUInt64Property), 1);
+				else if (Property->IsA(FFloatProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FFloatProperty), 1);
+				else if (Property->IsA(FDoubleProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FDoubleProperty), 1);
+				else if (Property->IsA(FObjectPropertyBase::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FObjectPropertyBase), 1);
+				else if (Property->IsA(FObjectProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FObjectProperty), 1);
+				else if (Property->IsA(FClassProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FClassProperty), 1);
+				else if (Property->IsA(FStrProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FStrProperty), 1);
+				else if (Property->IsA(FNameProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FNameProperty), 1);
+				else if (Property->IsA(FTextProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FTextProperty), 1);
+				else if (Property->IsA(FByteProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FByteProperty), 1);
+				else if (Property->IsA(FEnumProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FEnumProperty), 1);
+				else if (Property->IsA(FStructProperty::StaticClass()))
 				{
 					lua_newtable(inL);
 					lua_newtable(inL);
 					lua_pushstring(inL, "k");
 					lua_setfield(inL, -2, "__mode");
 					lua_setmetatable(inL, -2);
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UStructProperty), 2);
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FStructProperty), 2);
 					bPushFunction = true;
 				}
-				else if (Property->IsA(UMulticastDelegateProperty::StaticClass()))
+				else if (Property->IsA(FMulticastDelegateProperty::StaticClass()))
 				{
 					lua_newtable(inL);
 					lua_newtable(inL);
@@ -1044,35 +1044,35 @@ void UTableUtil::init_reflection_struct_meta(lua_State* inL, const char* structn
 					lua_setfield(inL, -2, "__mode");
 					lua_setmetatable(inL, -2);
 #if ENGINE_MINOR_VERSION >= 23
-					if (Property->IsA(UMulticastInlineDelegateProperty::StaticClass()))
-						lua_pushcclosure(inL, BpStructPropertyGetterName(UMulticastInlineDelegateProperty), 2);
+					if (Property->IsA(FMulticastInlineDelegateProperty::StaticClass()))
+						lua_pushcclosure(inL, BpStructPropertyGetterName(FMulticastInlineDelegateProperty), 2);
 					else
-						lua_pushcclosure(inL, BpStructPropertyGetterName(UMulticastSparseDelegateProperty), 2);
+						lua_pushcclosure(inL, BpStructPropertyGetterName(FMulticastSparseDelegateProperty), 2);
 #else
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UMulticastDelegateProperty), 2);
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FMulticastDelegateProperty), 2);
 #endif
 					bPushFunction = true;
 				}
-				else if (Property->IsA(UDelegateProperty::StaticClass()))
+				else if (Property->IsA(FDelegateProperty::StaticClass()))
 				{
 					lua_newtable(inL);
 					lua_newtable(inL);
 					lua_pushstring(inL, "k");
 					lua_setfield(inL, -2, "__mode");
 					lua_setmetatable(inL, -2);
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UDelegateProperty), 2);
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FDelegateProperty), 2);
 					bPushFunction = true;
 				}
-				else if (Property->IsA(UWeakObjectProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UWeakObjectProperty), 1);
-				else if (Property->IsA(UArrayProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UArrayProperty), 1);
-				else if (Property->IsA(UMapProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UMapProperty), 1);
-				else if (Property->IsA(USetProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(USetProperty), 1);
-				else if (Property->IsA(UInterfaceProperty::StaticClass()))
-					lua_pushcclosure(inL, BpStructPropertyGetterName(UInterfaceProperty), 1);
+				else if (Property->IsA(FWeakObjectProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FWeakObjectProperty), 1);
+				else if (Property->IsA(FArrayProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FArrayProperty), 1);
+				else if (Property->IsA(FMapProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FMapProperty), 1);
+				else if (Property->IsA(FSetProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FSetProperty), 1);
+				else if (Property->IsA(FInterfaceProperty::StaticClass()))
+					lua_pushcclosure(inL, BpStructPropertyGetterName(FInterfaceProperty), 1);
 				else
 				{
 					ensureAlwaysMsgf(0, TEXT("Bug"));
@@ -1378,14 +1378,14 @@ void UTableUtil::call(lua_State*inL, FFrame& Stack, RESULT_DECL)
 	lua_getglobal(inL, "Call");
 	push(inL, FuncToCall->GetName());
 	push(inL, Stack.Object);
-	TArray<UProperty*> PushBackParms;
-	TArray<UProperty*> ReturnParms;
+	TArray<FProperty*> PushBackParms;
+	TArray<FProperty*> ReturnParms;
 	
 	TArray<int32> StackIndexs;
 	int ArgIndex = 0;
 	int ParamCount = 2;
 	int OutParamCount = 0;
-	for (TFieldIterator<UProperty> It(FuncToCall); It && (It->GetPropertyFlags() & (CPF_Parm)); ++It)
+	for (TFieldIterator<FProperty> It(FuncToCall); It && (It->GetPropertyFlags() & (CPF_Parm)); ++It)
 	{
 		auto Prop = *It;
 		if ((Prop->GetPropertyFlags() & (CPF_ReturnParm)))
@@ -1461,85 +1461,85 @@ void UTableUtil::call(lua_State*inL, FFrame& Stack, RESULT_DECL)
 	}
 }
 
-UnrealLua::ArgType UTableUtil::GetTypeOfProperty(UProperty* Property)
+UnrealLua::ArgType UTableUtil::GetTypeOfProperty(FProperty* Property)
 {
 	uint64 CastFlag = GetPropertyFlag(Property);
 	switch (CastFlag)
 	{
-	case CASTCLASS_UByteProperty:
+	case CASTCLASS_FByteProperty:
 		return UnrealLua::Type::TYPE_Byte;
-	case CASTCLASS_UIntProperty:
+	case CASTCLASS_FIntProperty:
 		return UnrealLua::Type::TYPE_INTERGER;
-	case CASTCLASS_UInt8Property:
+	case CASTCLASS_FInt8Property:
 		return UnrealLua::Type::TYPE_INTERGER8;
-	case CASTCLASS_UUInt64Property:
+	case CASTCLASS_FUInt64Property:
 		return UnrealLua::Type::TYPE_INTERGERu64;
-	case CASTCLASS_UUInt32Property:
+	case CASTCLASS_FUInt32Property:
 		return UnrealLua::Type::TYPE_INTERGERu32;
-	case CASTCLASS_UUInt16Property:
+	case CASTCLASS_FUInt16Property:
 		return UnrealLua::Type::TYPE_INTERGERu16;
-	case CASTCLASS_UInt64Property:
+	case CASTCLASS_FInt64Property:
 		return UnrealLua::Type::TYPE_INTERGER64;
-	case CASTCLASS_UInt16Property:
+	case CASTCLASS_FInt16Property:
 		return UnrealLua::Type::TYPE_INTERGER16;
-	case CASTCLASS_UBoolProperty:
+	case CASTCLASS_FBoolProperty:
 		return UnrealLua::Type::TYPE_TBOOLEAN;
-	case CASTCLASS_UNameProperty:
+	case CASTCLASS_FNameProperty:
 		return UnrealLua::Type::TYPE_Name;
-	case CASTCLASS_UStrProperty:
+	case CASTCLASS_FStrProperty:
 		return UnrealLua::Type::TYPE_String;
-	case CASTCLASS_UTextProperty:
+	case CASTCLASS_FTextProperty:
 		return UnrealLua::Type::TYPE_Text;
-	case CASTCLASS_UDoubleProperty:
+	case CASTCLASS_FDoubleProperty:
 		return UnrealLua::Type::TYPE_TNUMBERdouble;
-	case CASTCLASS_UFloatProperty:
+	case CASTCLASS_FFloatProperty:
 		return UnrealLua::Type::TYPE_TNUMBERfloat;
-	case CASTCLASS_UObjectProperty:
+	case CASTCLASS_FObjectProperty:
 		return UnrealLua::Type::TYPE_UOBJECT;
-	case CASTCLASS_UStructProperty:
-		return GetNewType("F" + ((UStructProperty*)Property)->Struct->GetName());
+	case CASTCLASS_FStructProperty:
+		return GetNewType("F" + ((FStructProperty*)Property)->Struct->GetName());
 	}
 	return -1;
 }
 
 #define CasePush(PropertyType) case CASTCLASS_##PropertyType:pushproperty_##PropertyType(inL, Property, ptr);break;
-void UTableUtil::pushproperty(lua_State* inL, UProperty* Property, const void* ptr)
+void UTableUtil::pushproperty(lua_State* inL, FProperty* Property, const void* ptr)
 {
 // need to optimize
 	uint64 CastFlag = GetPropertyFlag(Property);
 	switch (CastFlag)
 	{
-		CasePush(UBoolProperty);
-		CasePush(UIntProperty);
-		CasePush(UInt8Property);
-		CasePush(UUInt16Property);
-		CasePush(UInt16Property);
-		CasePush(UUInt32Property);
-		CasePush(UInt64Property);
-		CasePush(UUInt64Property);
-		CasePush(UFloatProperty);
-		CasePush(UDoubleProperty);
-		CasePush(UObjectPropertyBase);
-		CasePush(UObjectProperty);
-		CasePush(UClassProperty);
-		CasePush(UStrProperty);
-		CasePush(UNameProperty);
-		CasePush(UTextProperty);
-		CasePush(UByteProperty);
-		CasePush(UEnumProperty);
-		CasePush(UStructProperty);
+		CasePush(FBoolProperty);
+		CasePush(FIntProperty);
+		CasePush(FInt8Property);
+		CasePush(FUInt16Property);
+		CasePush(FInt16Property);
+		CasePush(FUInt32Property);
+		CasePush(FInt64Property);
+		CasePush(FUInt64Property);
+		CasePush(FFloatProperty);
+		CasePush(FDoubleProperty);
+		CasePush(FObjectPropertyBase);
+		CasePush(FObjectProperty);
+		CasePush(FClassProperty);
+		CasePush(FStrProperty);
+		CasePush(FNameProperty);
+		CasePush(FTextProperty);
+		CasePush(FByteProperty);
+		CasePush(FEnumProperty);
+		CasePush(FStructProperty);
 #if ENGINE_MINOR_VERSION >= 23
-		CasePush(UMulticastInlineDelegateProperty);
-		CasePush(UMulticastSparseDelegateProperty);
+		CasePush(FMulticastInlineDelegateProperty);
+		CasePush(FMulticastSparseDelegateProperty);
 #else
-		CasePush(UMulticastDelegateProperty);
+		CasePush(FMulticastDelegateProperty);
 #endif
-		CasePush(UDelegateProperty);
-		CasePush(UWeakObjectProperty);
-		CasePush(UArrayProperty);
-		CasePush(UMapProperty);
-		CasePush(USetProperty);
-		CasePush(UInterfaceProperty);
+		CasePush(FDelegateProperty);
+		CasePush(FWeakObjectProperty);
+		CasePush(FArrayProperty);
+		CasePush(FMapProperty);
+		CasePush(FSetProperty);
+		CasePush(FInterfaceProperty);
 	default:
 		if (auto* ProcessFunc = PropertyClassToPushFuncMap.Find(Property->GetClass()))
 		{
@@ -1547,12 +1547,12 @@ void UTableUtil::pushproperty(lua_State* inL, UProperty* Property, const void* p
 		}
 		else
 		{
-			if (UStructProperty* p = Cast<UStructProperty>(Property))
+			if (FStructProperty* p = CastField<FStructProperty>(Property))
 			{
 				pushproperty_type(inL, p, ptr);
 			}
 
-			else if (UObjectPropertyBase* p = Cast<UObjectPropertyBase>(Property))
+			else if (FObjectPropertyBase* p = CastField<FObjectPropertyBase>(Property))
 			{
 				pushproperty_type(inL, p, ptr);
 			}
@@ -1566,14 +1566,14 @@ void UTableUtil::pushproperty(lua_State* inL, UProperty* Property, const void* p
 	}
 }
 
-void UTableUtil::push_ret_property(lua_State*inL, UProperty* property, const void* ptr)
+void UTableUtil::push_ret_property(lua_State*inL, FProperty* property, const void* ptr)
 {
-	if (UTextProperty* p = Cast<UTextProperty>(property))
+	if (FTextProperty* p = CastField<FTextProperty>(property))
 	{
 		FText* Text_ptr = (FText*)p->ContainerPtrToValuePtr<uint8>(ptr);
 		push_ret(inL, *Text_ptr);
 	}
-	else if (UStructProperty* p = Cast<UStructProperty>(property))
+	else if (FStructProperty* p = CastField<FStructProperty>(property))
 	{
 		UScriptStruct* Struct = p->Struct;
 		FString TypeName;
@@ -1594,7 +1594,7 @@ void UTableUtil::push_ret_property(lua_State*inL, UProperty* property, const voi
 		nogc_name += "_nogc";
 		pushstruct_nogc(inL, TCHAR_TO_UTF8(*TypeName), TCHAR_TO_UTF8(*nogc_name), result);
 	}
-	else if (UArrayProperty* p = Cast<UArrayProperty>(property))
+	else if (FArrayProperty* p = CastField<FArrayProperty>(property))
 	{
 		FScriptArrayHelper_InContainer result(p, ptr);
 		lua_newtable(inL);
@@ -1605,7 +1605,7 @@ void UTableUtil::push_ret_property(lua_State*inL, UProperty* property, const voi
 			lua_rawset(inL, -3);
 		}
 	}
-	else if (UMapProperty* p = Cast<UMapProperty>(property))
+	else if (FMapProperty* p = CastField<FMapProperty>(property))
 	{
 		FScriptMapHelper_InContainer result(p, ptr);
 		lua_newtable(inL);
@@ -1617,7 +1617,7 @@ void UTableUtil::push_ret_property(lua_State*inL, UProperty* property, const voi
 			lua_rawset(inL, -3);
 		}
 	}
-	else if (USetProperty* p = Cast<USetProperty>(property))
+	else if (FSetProperty* p = CastField<FSetProperty>(property))
 	{
 		FScriptSetHelper_InContainer result(p, ptr);
 		lua_newtable(inL);
@@ -1632,9 +1632,9 @@ void UTableUtil::push_ret_property(lua_State*inL, UProperty* property, const voi
 		pushproperty(inL, property, ptr);
 }
 
-void UTableUtil::pushback_ref_property(lua_State*inL, int32 LuaStackIndex, UProperty* property, const void* ptr)
+void UTableUtil::pushback_ref_property(lua_State*inL, int32 LuaStackIndex, FProperty* property, const void* ptr)
 {
-	if (UTextProperty* p = Cast<UTextProperty>(property))
+	if (FTextProperty* p = CastField<FTextProperty>(property))
 	{
 		if (!lua_isuserdata(inL, LuaStackIndex))
 		{
@@ -1649,14 +1649,14 @@ void UTableUtil::pushback_ref_property(lua_State*inL, int32 LuaStackIndex, UProp
 			lua_pushvalue(inL, LuaStackIndex);
 		}
 	}
-	else if (UStructProperty* p = Cast<UStructProperty>(property))
+	else if (FStructProperty* p = CastField<FStructProperty>(property))
 	{
 		void* DestPtr = tovoid(inL, LuaStackIndex);
 		ptr = (void*)p->ContainerPtrToValuePtr<uint8>(ptr);
 		p->CopyCompleteValueFromScriptVM(DestPtr, ptr);
 		lua_pushvalue(inL, LuaStackIndex);
 	}
-	else if (UArrayProperty *p = Cast<UArrayProperty>(property))
+	else if (FArrayProperty *p = CastField<FArrayProperty>(property))
 	{
 		if (UnrealLua::IsGlueTArray(inL, LuaStackIndex))
 		{
@@ -1690,7 +1690,7 @@ void UTableUtil::pushback_ref_property(lua_State*inL, int32 LuaStackIndex, UProp
 			UnrealLua::ReportError(inL,"not arr");
 		}
 	}
-	else if (UMapProperty *p = Cast<UMapProperty>(property))
+	else if (FMapProperty *p = CastField<FMapProperty>(property))
 	{
 		if (UnrealLua::IsGlueTMap(inL, LuaStackIndex))
 		{
@@ -1706,7 +1706,7 @@ void UTableUtil::pushback_ref_property(lua_State*inL, int32 LuaStackIndex, UProp
 		else if (lua_istable(inL, LuaStackIndex))
 		{
 			FScriptMapHelper_InContainer result(p, ptr);
-			UProperty* CurrKeyProp = p->KeyProp;
+			FProperty* CurrKeyProp = p->KeyProp;
 			const int32 KeyPropertySize = CurrKeyProp->ElementSize * CurrKeyProp->ArrayDim;
 			void* KeyStorageSpace = FMemory_Alloca(KeyPropertySize);
 			CurrKeyProp->InitializeValue(KeyStorageSpace);
@@ -1750,7 +1750,7 @@ void UTableUtil::pushback_ref_property(lua_State*inL, int32 LuaStackIndex, UProp
 			UnrealLua::ReportError(inL,"not map");
 		}
 	}
-	else if (USetProperty *p = Cast<USetProperty>(property))
+	else if (FSetProperty *p = CastField<FSetProperty>(property))
 	{
 		if (UnrealLua::IsGlueTSet(inL, LuaStackIndex))
 		{
@@ -1770,7 +1770,7 @@ void UTableUtil::pushback_ref_property(lua_State*inL, int32 LuaStackIndex, UProp
 			lua_pushnil(inL);
 			int i = 1;
 			FScriptSetHelper_InContainer result(p, ptr);
-			UProperty* CurrKeyProp = p->ElementProp;
+			FProperty* CurrKeyProp = p->ElementProp;
 			const int32 KeyPropertySize = CurrKeyProp->ElementSize * CurrKeyProp->ArrayDim;
 			void* KeyStorageSpace = FMemory_Alloca(KeyPropertySize);
 			CurrKeyProp->InitializeValue(KeyStorageSpace);
@@ -1832,22 +1832,22 @@ void UTableUtil::pushback_ref_property(lua_State*inL, int32 LuaStackIndex, UProp
 	}
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, UBoolProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FBoolProperty* p, const void*ptr)
 {
 	lua_pushboolean(inL, (bool)p->GetPropertyValue_InContainer(ptr));
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, UIntProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FIntProperty* p, const void*ptr)
 {
 	lua_pushinteger(inL, (int32)p->GetPropertyValue_InContainer(ptr));
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, UInt8Property* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FInt8Property* p, const void*ptr)
 {
 	lua_pushinteger(inL, (int8)p->GetPropertyValue_InContainer(ptr));
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, UInt64Property* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FInt64Property* p, const void*ptr)
 {
 #ifdef USE_LUA53 
 	lua_pushinteger(inL, (int64)p->GetPropertyValue_InContainer(ptr));
@@ -1856,7 +1856,7 @@ void UTableUtil::pushproperty_type(lua_State*inL, UInt64Property* p, const void*
 #endif
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, UUInt64Property* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FUInt64Property* p, const void*ptr)
 {
 #ifdef USE_LUA53 
 	lua_pushinteger(inL, (uint64)p->GetPropertyValue_InContainer(ptr));
@@ -1865,77 +1865,77 @@ void UTableUtil::pushproperty_type(lua_State*inL, UUInt64Property* p, const void
 #endif
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, UFloatProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FFloatProperty* p, const void*ptr)
 {
 	lua_pushnumber(inL, (float)p->GetPropertyValue_InContainer(ptr));
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, UDoubleProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FDoubleProperty* p, const void*ptr)
 {
 	lua_pushnumber(inL, (double)p->GetPropertyValue_InContainer(ptr));
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, UObjectPropertyBase* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FObjectPropertyBase* p, const void*ptr)
 {
 	pushuobject(inL, p->GetObjectPropertyValue_InContainer(ptr));
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, UObjectProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FObjectProperty* p, const void*ptr)
 {
 	pushuobject(inL, p->GetObjectPropertyValue_InContainer(ptr));
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, UClassProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FClassProperty* p, const void*ptr)
 {
 	pushuobject(inL, p->GetObjectPropertyValue_InContainer(ptr));
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, UStrProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FStrProperty* p, const void*ptr)
 {
 	lua_pushstring(inL, TCHAR_TO_UTF8(*(p->GetPropertyValue_InContainer(ptr))));
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, UNameProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FNameProperty* p, const void*ptr)
 {
 	FName result = (FName)p->GetPropertyValue_InContainer(ptr);
 	lua_pushstring(inL, TCHAR_TO_UTF8(*result.ToString()));
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, UTextProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FTextProperty* p, const void*ptr)
 {
 	ptr = (void*)p->ContainerPtrToValuePtr<uint8>(ptr);
 	pushstruct_nogc(inL, "FText", "FText_nogc", (void*)ptr);
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, UByteProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FByteProperty* p, const void*ptr)
 {
 	lua_pushinteger(inL, (int)p->GetPropertyValue_InContainer(ptr));
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, UEnumProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FEnumProperty* p, const void*ptr)
 {
 	pushproperty(inL, p->GetUnderlyingProperty(), p->ContainerPtrToValuePtr<void>(ptr));
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, UWeakObjectProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FWeakObjectProperty* p, const void*ptr)
 {
 	pushuobject(inL, p->GetObjectPropertyValue_InContainer(ptr));
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, UUInt32Property* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FUInt32Property* p, const void*ptr)
 {
 	lua_pushinteger(inL, (int32)p->GetPropertyValue_InContainer(ptr));
 }
-void UTableUtil::pushproperty_type(lua_State*inL, UUInt16Property* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FUInt16Property* p, const void*ptr)
 {
 	lua_pushinteger(inL, (int32)p->GetPropertyValue_InContainer(ptr));
 }
-void UTableUtil::pushproperty_type(lua_State*inL, UInt16Property* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FInt16Property* p, const void*ptr)
 {
 	lua_pushinteger(inL, (int32)p->GetPropertyValue_InContainer(ptr));
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, UMulticastDelegateProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FMulticastDelegateProperty* p, const void*ptr)
 {
 	UFunction* FunSig = p->SignatureFunction;
 	void* result = (void*)p->ContainerPtrToValuePtr<uint8>(ptr);
@@ -1945,110 +1945,110 @@ void UTableUtil::pushproperty_type(lua_State*inL, UMulticastDelegateProperty* p,
 }
 
 #if ENGINE_MINOR_VERSION >= 23
-void UTableUtil::pushproperty_type(lua_State*inL, UMulticastInlineDelegateProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FMulticastInlineDelegateProperty* p, const void*ptr)
 {
 	check(0)
 }
-void UTableUtil::pushproperty_type(lua_State*inL, UMulticastSparseDelegateProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FMulticastSparseDelegateProperty* p, const void*ptr)
 {
 	check(0)
 }
 #endif
 
-void UTableUtil::pushproperty_type(lua_State*inL, UInterfaceProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FInterfaceProperty* p, const void*ptr)
 {
 	FScriptInterface* result = (FScriptInterface*)p->GetPropertyValuePtr_InContainer(ptr);
 	pushuobject(inL, (void*)result->GetObject());
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, UDelegateProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FDelegateProperty* p, const void*ptr)
 {
 	FScriptDelegate* DelegatePtr = (FScriptDelegate*)p->GetPropertyValuePtr_InContainer(ptr);
 	ULuaDelegateSingle* NewOne = ULuaDelegateSingle::CreateInCppRef(DelegatePtr, p->SignatureFunction);
 	push(inL, NewOne);
 }
 
-void UTableUtil::pushproperty_valueptr(lua_State*inL, UProperty* property, const void* ptr)
+void UTableUtil::pushproperty_valueptr(lua_State*inL, FProperty* property, const void* ptr)
 {
 	if (property == nullptr)
 	{
 		ensureAlwaysMsgf(0, TEXT("Some Bug?"));
 		lua_pushnil(inL);
 	}
-	else if (UIntProperty* p = Cast<UIntProperty>(property))
+	else if (FIntProperty* p = CastField<FIntProperty>(property))
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
-	else if (UInt8Property* p = Cast<UInt8Property>(property))
+	else if (FInt8Property* p = CastField<FInt8Property>(property))
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
-	else if (UUInt32Property* p = Cast<UUInt32Property>(property))
+	else if (FUInt32Property* p = CastField<FUInt32Property>(property))
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
-	else if (UInt64Property* p = Cast<UInt64Property>(property))
+	else if (FInt64Property* p = CastField<FInt64Property>(property))
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
-	else if (UFloatProperty* p = Cast<UFloatProperty>(property))
+	else if (FFloatProperty* p = CastField<FFloatProperty>(property))
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
-	else if (UDoubleProperty* p = Cast<UDoubleProperty>(property))
+	else if (FDoubleProperty* p = CastField<FDoubleProperty>(property))
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
-	else if (UBoolProperty * p = Cast<UBoolProperty>(property))
+	else if (FBoolProperty * p = CastField<FBoolProperty>(property))
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
-	else if (UByteProperty* p = Cast<UByteProperty>(property))
+	else if (FByteProperty* p = CastField<FByteProperty>(property))
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
-	else if (UEnumProperty* p = Cast<UEnumProperty>(property))
+	else if (FEnumProperty* p = CastField<FEnumProperty>(property))
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
 
-	else if (UStrProperty* p = Cast<UStrProperty>(property))
+	else if (FStrProperty* p = CastField<FStrProperty>(property))
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
-	else if (UNameProperty* p = Cast<UNameProperty>(property))
+	else if (FNameProperty* p = CastField<FNameProperty>(property))
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
-	else if (UTextProperty* p = Cast<UTextProperty>(property))
+	else if (FTextProperty* p = CastField<FTextProperty>(property))
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
-	else if (UStructProperty* p = Cast<UStructProperty>(property))
+	else if (FStructProperty* p = CastField<FStructProperty>(property))
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
-	else if (UArrayProperty* p = Cast<UArrayProperty>(property))
+	else if (FArrayProperty* p = CastField<FArrayProperty>(property))
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
-	else if (UMapProperty* p = Cast<UMapProperty>(property))
+	else if (FMapProperty* p = CastField<FMapProperty>(property))
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
-	else if (USetProperty* p = Cast<USetProperty>(property))
+	else if (FSetProperty* p = CastField<FSetProperty>(property))
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
-	else if (UObjectPropertyBase* p = Cast<UObjectPropertyBase>(property))
+	else if (FObjectPropertyBase* p = CastField<FObjectPropertyBase>(property))
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
-	else if (UInterfaceProperty* p = Cast<UInterfaceProperty>(property))
+	else if (FInterfaceProperty* p = CastField<FInterfaceProperty>(property))
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
-	else if (UDelegateProperty* p = Cast<UDelegateProperty>(property))
+	else if (FDelegateProperty* p = CastField<FDelegateProperty>(property))
 	{
 		pushproperty_type_valueptr(inL, p, ptr);
 	}
@@ -2059,22 +2059,22 @@ void UTableUtil::pushproperty_valueptr(lua_State*inL, UProperty* property, const
 }
 
 
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UBoolProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FBoolProperty* p, const void*ptr)
 {
 	lua_pushboolean(inL, (bool)p->GetPropertyValue(ptr));
 }
 
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UIntProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FIntProperty* p, const void*ptr)
 {
 	lua_pushinteger(inL, (int32)p->GetPropertyValue(ptr));
 }
 
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UInt8Property* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FInt8Property* p, const void*ptr)
 {
 	lua_pushinteger(inL, (int8)p->GetPropertyValue(ptr));
 }
 
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UInt64Property* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FInt64Property* p, const void*ptr)
 {
 #ifdef USE_LUA53 
 	lua_pushinteger(inL, (int64)p->GetPropertyValue(ptr));
@@ -2083,79 +2083,79 @@ void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UInt64Property* p, co
 #endif
 }
 
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UFloatProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FFloatProperty* p, const void*ptr)
 {
 	lua_pushnumber(inL, (float)p->GetPropertyValue(ptr));
 }
 
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UDoubleProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FDoubleProperty* p, const void*ptr)
 {
 	lua_pushnumber(inL, (double)p->GetPropertyValue(ptr));
 }
 
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UObjectPropertyBase* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FObjectPropertyBase* p, const void*ptr)
 {
 	pushuobject(inL, p->GetObjectPropertyValue(ptr));
 }
 
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UObjectProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FObjectProperty* p, const void*ptr)
 {
 	pushuobject(inL, p->GetObjectPropertyValue(ptr));
 }
 
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UClassProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FClassProperty* p, const void*ptr)
 {
 	pushuobject(inL, p->GetObjectPropertyValue(ptr));
 }
 
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UStrProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FStrProperty* p, const void*ptr)
 {
 	lua_pushstring(inL, TCHAR_TO_UTF8(*(p->GetPropertyValue(ptr))));
 }
 
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UNameProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FNameProperty* p, const void*ptr)
 {
 	FName result = (FName)p->GetPropertyValue(ptr);
 	lua_pushstring(inL, TCHAR_TO_UTF8(*result.ToString()));
 }
 
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UTextProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FTextProperty* p, const void*ptr)
 {
 	pushstruct_nogc(inL, "FText", "FText_nogc",(void*)ptr);
 }
 
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UByteProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FByteProperty* p, const void*ptr)
 {
 	lua_pushinteger(inL, (int)p->GetPropertyValue(ptr));
 }
 
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UEnumProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FEnumProperty* p, const void*ptr)
 {
 	pushproperty_valueptr(inL, p->GetUnderlyingProperty(), ptr);
 }
 
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UWeakObjectProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FWeakObjectProperty* p, const void*ptr)
 {
 	pushuobject(inL, p->GetObjectPropertyValue(ptr));
 }
 
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UUInt32Property* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FUInt32Property* p, const void*ptr)
 {
 	lua_pushinteger(inL, (int32)p->GetPropertyValue(ptr));
 }
 
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UMulticastDelegateProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FMulticastDelegateProperty* p, const void*ptr)
 {
 }
 #if ENGINE_MINOR_VERSION >= 23
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UMulticastInlineDelegateProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FMulticastInlineDelegateProperty* p, const void*ptr)
 {
 }
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UMulticastSparseDelegateProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FMulticastSparseDelegateProperty* p, const void*ptr)
 {
 }
 #endif
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UStructProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FStructProperty* p, const void*ptr)
 {
 	FString TypeName;
 	if (UUserDefinedStruct* BpStruct = Cast<UUserDefinedStruct>(p->Struct))
@@ -2171,28 +2171,28 @@ void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UStructProperty* p, c
 	pushstruct_nogc(inL, TCHAR_TO_UTF8(*TypeName), TCHAR_TO_UTF8(*TypeName_nogc),(void*)ptr);
 }
 
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UArrayProperty* property, const void* ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FArrayProperty* property, const void* ptr)
 {
 	pushstruct_gc(inL, "ULuaArrayHelper", ULuaArrayHelper::GetHelperCPP_ValuePtr((void*)ptr, property));
 }
 
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UMapProperty* property, const void* ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FMapProperty* property, const void* ptr)
 {
 	pushstruct_gc(inL, "ULuaMapHelper", ULuaMapHelper::GetHelperCPP_ValuePtr((void*)ptr, property));
 }
 
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, USetProperty* property, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FSetProperty* property, const void*ptr)
 {
 	pushstruct_gc(inL, "ULuaSetHelper", ULuaSetHelper::GetHelperCPP_ValuePtr((void*)ptr, property));
 }
 
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UInterfaceProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FInterfaceProperty* p, const void*ptr)
 {
 	FScriptInterface* result = (FScriptInterface*)p->GetPropertyValuePtr(ptr);
 	pushuobject(inL, (void*)result->GetObject());
 }
 // only for bp call lua
-void UTableUtil::pushproperty_type_valueptr(lua_State*inL, UDelegateProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type_valueptr(lua_State*inL, FDelegateProperty* p, const void*ptr)
 {
 	FScriptDelegate* DelegatePtr = (FScriptDelegate*)p->GetPropertyValuePtr(ptr);
 	ULuaDelegateSingle* NewOne = ULuaDelegateSingle::CreateInCppCopy(DelegatePtr, p->SignatureFunction);
@@ -2446,7 +2446,7 @@ int UTableUtil::require_lua(lua_State* inL)
 }
 
 
-void UTableUtil::pushproperty_type(lua_State*inL, UStructProperty* p, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FStructProperty* p, const void*ptr)
 {
 	FString TypeName;
 	if (UUserDefinedStruct* BpStruct = Cast<UUserDefinedStruct>(p->Struct))
@@ -2462,22 +2462,22 @@ void UTableUtil::pushproperty_type(lua_State*inL, UStructProperty* p, const void
 	pushstruct_nogc(inL, TCHAR_TO_UTF8(*TypeName), TCHAR_TO_UTF8(*TypeName_nogc), result);
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, UArrayProperty* Property, const void* ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FArrayProperty* Property, const void* ptr)
 {
 	pushstruct_gc(inL, "ULuaArrayHelper", ULuaArrayHelper::GetHelperCPP((void*)ptr, Property));
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, UMapProperty* Property, const void* ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FMapProperty* Property, const void* ptr)
 {
 	pushstruct_gc(inL, "ULuaMapHelper", ULuaMapHelper::GetHelperCPP((void*)ptr, Property));
 }
 
-void UTableUtil::pushproperty_type(lua_State*inL, USetProperty* Property, const void*ptr)
+void UTableUtil::pushproperty_type(lua_State*inL, FSetProperty* Property, const void*ptr)
 {
 	pushstruct_gc(inL, "ULuaSetHelper", ULuaSetHelper::GetHelperCPP((void*)ptr, Property));
 }
 
-void UTableUtil::popproperty(lua_State* inL, int index, UProperty* property, void* ptr)
+void UTableUtil::popproperty(lua_State* inL, int index, FProperty* property, void* ptr)
 {
 #if LuaDebug
 	if (lua_gettop(inL) < FMath::Abs(index))
@@ -2490,12 +2490,12 @@ void UTableUtil::popproperty(lua_State* inL, int index, UProperty* property, voi
 	else
 	{
 		
-		if (UStructProperty* p = Cast<UStructProperty>(property))
+		if (FStructProperty* p = CastField<FStructProperty>(property))
 		{
 			popproperty_type(inL, index, p, ptr);
 		}
 		
-		else if (UObjectPropertyBase* p = Cast<UObjectPropertyBase>(property))
+		else if (FObjectPropertyBase* p = CastField<FObjectPropertyBase>(property))
 		{
 			popproperty_type(inL, index, p, ptr);
 		}
@@ -2514,126 +2514,126 @@ int UTableUtil::push(lua_State *inL, const void* VoidPtr)
 	return 1;
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UBoolProperty* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FBoolProperty* p, void*ptr)
 {
 	bool value = popiml<bool>::pop(inL, index);
 	p->SetPropertyValue_InContainer(ptr, value);
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UIntProperty* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FIntProperty* p, void*ptr)
 {
 	int32 value = popiml<int>::pop(inL, index);
 	p->SetPropertyValue_InContainer(ptr, value);
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UInt8Property* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FInt8Property* p, void*ptr)
 {
 	int8 value = popiml<int8>::pop(inL, index);
 	p->SetPropertyValue_InContainer(ptr, value);
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UInt16Property* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FInt16Property* p, void*ptr)
 {
 	int16 value = popiml<int>::pop(inL, index);
 	p->SetPropertyValue_InContainer(ptr, value);
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UUInt16Property* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FUInt16Property* p, void*ptr)
 {
 	uint16 value = popiml<int>::pop(inL, index);
 	p->SetPropertyValue_InContainer(ptr, value);
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UInt64Property* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FInt64Property* p, void*ptr)
 {
 	int64 value = popiml<int64>::pop(inL, index);
 	p->SetPropertyValue_InContainer(ptr, value);
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UUInt64Property* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FUInt64Property* p, void*ptr)
 {
 	uint64 value = popiml<uint64>::pop(inL, index);
 	p->SetPropertyValue_InContainer(ptr, value);
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UUInt32Property* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FUInt32Property* p, void*ptr)
 {
 	uint32 value = popiml<uint32>::pop(inL, index);
 	p->SetPropertyValue_InContainer(ptr, value);
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UFloatProperty* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FFloatProperty* p, void*ptr)
 {
 	float value = popiml<float>::pop(inL, index);
 	p->SetPropertyValue_InContainer(ptr, value);
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UDoubleProperty* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FDoubleProperty* p, void*ptr)
 {
 	double value = popiml<double>::pop(inL, index);
 	p->SetPropertyValue_InContainer(ptr, value);
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UObjectPropertyBase* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FObjectPropertyBase* p, void*ptr)
 {
 	UObject* value = popiml<UObject*>::pop(inL, index);
 	p->SetObjectPropertyValue_InContainer(ptr, value);
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UObjectProperty* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FObjectProperty* p, void*ptr)
 {
 	UObject* value = popiml<UObject*>::pop(inL, index);
 	p->SetObjectPropertyValue_InContainer(ptr, value);
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UClassProperty* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FClassProperty* p, void*ptr)
 {
 	UObject* value = popiml<UObject*>::pop(inL, index);
 	p->SetObjectPropertyValue_InContainer(ptr, value);
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UWeakObjectProperty* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FWeakObjectProperty* p, void*ptr)
 {
 	UObject* value = popiml<UObject*>::pop(inL, index);
 	p->SetObjectPropertyValue_InContainer(ptr, value);
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UStrProperty* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FStrProperty* p, void*ptr)
 {
 	FString value = popiml<FString>::pop(inL, index);
 	p->SetPropertyValue_InContainer(ptr, value);
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UNameProperty* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FNameProperty* p, void*ptr)
 {
 	FName value = popiml<FName>::pop(inL, index);
 	p->SetPropertyValue_InContainer(ptr, value);
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UTextProperty* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FTextProperty* p, void*ptr)
 {
 	FText value = popiml<FText>::pop(inL, index);
 	p->SetPropertyValue_InContainer(ptr, value);
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UByteProperty* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FByteProperty* p, void*ptr)
 {
 	int value = popiml<int>::pop(inL, index);
 	p->SetPropertyValue_InContainer(ptr, value);
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UEnumProperty* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FEnumProperty* p, void*ptr)
 {
 	popproperty(inL, index, p->GetUnderlyingProperty(), p->ContainerPtrToValuePtr<void>(ptr));
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UStructProperty* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FStructProperty* p, void*ptr)
 {
 	void* value = tostruct(inL, index);
 	p->CopyCompleteValue(p->ContainerPtrToValuePtr<void>(ptr), value);
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UArrayProperty* p, void* ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FArrayProperty* p, void* ptr)
 {
 	if (UnrealLua::IsGlueTArray(inL, index))
 	{
@@ -2665,7 +2665,7 @@ void UTableUtil::popproperty_type(lua_State*inL, int index, UArrayProperty* p, v
 	}
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UMapProperty* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FMapProperty* p, void*ptr)
 {
 	if (UnrealLua::IsGlueTMap(inL, index))
 	{
@@ -2703,7 +2703,7 @@ void UTableUtil::popproperty_type(lua_State*inL, int index, UMapProperty* p, voi
 	}
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, USetProperty* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FSetProperty* p, void*ptr)
 {
 	if (UnrealLua::IsGlueTSet(inL, index))
 	{
@@ -2739,30 +2739,30 @@ void UTableUtil::popproperty_type(lua_State*inL, int index, USetProperty* p, voi
 	}
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UMulticastDelegateProperty* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FMulticastDelegateProperty* p, void*ptr)
 {
 	ensureAlwaysMsgf(0, TEXT("shouldn't come here"));
 }
 
 #if ENGINE_MINOR_VERSION >= 23
-void UTableUtil::popproperty_type(lua_State*inL, int index, UMulticastSparseDelegateProperty* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FMulticastSparseDelegateProperty* p, void*ptr)
 {
 	ensureAlwaysMsgf(0, TEXT("shouldn't come here"));
 }
-void UTableUtil::popproperty_type(lua_State*inL, int index, UMulticastInlineDelegateProperty* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FMulticastInlineDelegateProperty* p, void*ptr)
 {
 	ensureAlwaysMsgf(0, TEXT("shouldn't come here"));
 }
 #endif
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UInterfaceProperty* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FInterfaceProperty* p, void*ptr)
 {
 	FScriptInterface* result = (FScriptInterface*)p->GetPropertyValuePtr_InContainer(ptr);
 	UObject* value = (UObject*)touobject(inL, index);
 	result->SetObject(value);
 }
 
-void UTableUtil::popproperty_type(lua_State*inL, int index, UDelegateProperty* p, void*ptr)
+void UTableUtil::popproperty_type(lua_State*inL, int index, FDelegateProperty* p, void*ptr)
 {
 	ensureAlwaysMsgf(0, TEXT("shouldn't come here"));
 }
@@ -3212,9 +3212,9 @@ void UTableUtil::push_totable(lua_State*inL, UScriptStruct* StructType, const vo
 {
 	lua_newtable(inL);
 	bool IsBpStruct = StructType->IsA(UUserDefinedStruct::StaticClass());
-	for (TFieldIterator<UProperty> PropertyIt(StructType); PropertyIt; ++PropertyIt)
+	for (TFieldIterator<FProperty> PropertyIt(StructType); PropertyIt; ++PropertyIt)
 	{
-		UProperty* Property = *PropertyIt;
+		FProperty* Property = *PropertyIt;
 		FString PropertyName = Property->GetName();
 		if (IsBpStruct)
 		{
@@ -3229,27 +3229,27 @@ void UTableUtil::push_totable(lua_State*inL, UScriptStruct* StructType, const vo
 	}
 }
 
-void UTableUtil::push_totable(lua_State*inL, UProperty* Property, const void* p)
+void UTableUtil::push_totable(lua_State*inL, FProperty* Property, const void* p)
 {
-	if (UStructProperty* StructProperty = Cast<UStructProperty>(Property))
+	if (FStructProperty* StructProperty = CastField<FStructProperty>(Property))
 	{
 		push_totable(inL, StructProperty->Struct, StructProperty->ContainerPtrToValuePtr<uint8>(p));
 	}
-	else if (UTextProperty* TextProperty = Cast<UTextProperty>(Property))
+	else if (FTextProperty* TextProperty = CastField<FTextProperty>(Property))
 	{
 		FText* Text_ptr = (FText*)TextProperty->ContainerPtrToValuePtr<uint8>(p);
 		FText* Ret = new FText(*Text_ptr);
 		pushstruct_gc(inL, "FText", Ret);
 	}
-	else if (UArrayProperty* ArrProperty = Cast<UArrayProperty>(Property))
+	else if (FArrayProperty* ArrProperty = CastField<FArrayProperty>(Property))
 	{
 		push_totable(inL, ArrProperty, ArrProperty->ContainerPtrToValuePtr<uint8>(p));
 	}
-	else if (UMapProperty* MapProperty = Cast<UMapProperty>(Property))
+	else if (FMapProperty* MapProperty = CastField<FMapProperty>(Property))
 	{
 		push_totable(inL, MapProperty, MapProperty->ContainerPtrToValuePtr<uint8>(p));
 	}
-	else if (USetProperty* SetProperty = Cast<USetProperty>(Property))
+	else if (FSetProperty* SetProperty = CastField<FSetProperty>(Property))
 	{
 		push_totable(inL, SetProperty, SetProperty->ContainerPtrToValuePtr<uint8>(p));
 	}
@@ -3260,7 +3260,7 @@ void UTableUtil::push_totable(lua_State*inL, UProperty* Property, const void* p)
 }
 
 
-void UTableUtil::push_totable(lua_State*inL, UArrayProperty* Property, const void* p)
+void UTableUtil::push_totable(lua_State*inL, FArrayProperty* Property, const void* p)
 {
 	FScriptArrayHelper result(Property, p);
 	lua_newtable(inL);
@@ -3272,7 +3272,7 @@ void UTableUtil::push_totable(lua_State*inL, UArrayProperty* Property, const voi
 	}
 }
 
-void UTableUtil::push_totable(lua_State*inL, UMapProperty* Property, const void* p)
+void UTableUtil::push_totable(lua_State*inL, FMapProperty* Property, const void* p)
 {
 	FScriptMapHelper result(Property, p);
 	lua_newtable(inL);
@@ -3286,7 +3286,7 @@ void UTableUtil::push_totable(lua_State*inL, UMapProperty* Property, const void*
 
 }
 
-void UTableUtil::push_totable(lua_State*inL, USetProperty* Property, const void* p)
+void UTableUtil::push_totable(lua_State*inL, FSetProperty* Property, const void* p)
 {
 	FScriptSetHelper result(Property, p);
 	lua_newtable(inL);

@@ -8,13 +8,13 @@
 ULuaSetHelper::ULuaSetHelper()
 {}
 
-void ULuaSetHelper::Init(void* _Obj, USetProperty* _Property)
+void ULuaSetHelper::Init(void* _Obj, FSetProperty* _Property)
 {
 	Property = _Property;
 	Obj = Property->ContainerPtrToValuePtr<void>(_Obj);
 }
 
-void ULuaSetHelper::Init_ValuePtr(void* _Obj, USetProperty* _Property)
+void ULuaSetHelper::Init_ValuePtr(void* _Obj, FSetProperty* _Property)
 {
 	Property = _Property;
 	Obj = _Obj;
@@ -22,7 +22,7 @@ void ULuaSetHelper::Init_ValuePtr(void* _Obj, USetProperty* _Property)
 
 ULuaSetHelper* ULuaSetHelper::GetHelper(UObject* _Obj, const FName& PropertyName)
 {
-	USetProperty* P = Cast<USetProperty>(_Obj->GetClass()->FindPropertyByName(PropertyName));
+	FSetProperty* P = CastFieldChecked<FSetProperty>(_Obj->GetClass()->FindPropertyByName(PropertyName));
 	if (P)
 	{
 		return GetHelperCPP(_Obj, P);
@@ -31,21 +31,21 @@ ULuaSetHelper* ULuaSetHelper::GetHelper(UObject* _Obj, const FName& PropertyName
 		return nullptr;
 }
 
-ULuaSetHelper* ULuaSetHelper::GetHelperCPP(void* _Obj, USetProperty* Property)
+ULuaSetHelper* ULuaSetHelper::GetHelperCPP(void* _Obj, FSetProperty* Property)
 {
 	ULuaSetHelper* Result = new ULuaSetHelper;
 	Result->Init(_Obj, Property);
 	return Result;
 }
 
-ULuaSetHelper* ULuaSetHelper::GetHelperCPP_ValuePtr(void* _Obj, USetProperty* Property)
+ULuaSetHelper* ULuaSetHelper::GetHelperCPP_ValuePtr(void* _Obj, FSetProperty* Property)
 {
 	ULuaSetHelper* Result = new ULuaSetHelper;
 	Result->Init_ValuePtr(_Obj, Property);
 	return Result;
 }
 
-void ULuaSetHelper::Copy(FScriptSetHelper& SrcSetHelper, FScriptSetHelper& DestSetHelper, USetProperty* p)
+void ULuaSetHelper::Copy(FScriptSetHelper& SrcSetHelper, FScriptSetHelper& DestSetHelper, FSetProperty* p)
 {
 	int32 Num = SrcSetHelper.Num();
 	DestSetHelper.EmptyElements(Num);
@@ -73,7 +73,7 @@ void ULuaSetHelper::Copy(FScriptSetHelper& SrcSetHelper, FScriptSetHelper& DestS
 	DestSetHelper.Rehash();
 }
 
-void ULuaSetHelper::CopyTo(USetProperty* p, void* ptr)
+void ULuaSetHelper::CopyTo(FSetProperty* p, void* ptr)
 {
 	if (ptr == Obj && p == Property)
 		return;
@@ -82,7 +82,7 @@ void ULuaSetHelper::CopyTo(USetProperty* p, void* ptr)
 	Copy(SrcSetHelper, DestSetHelper, p);
 }
 
-void ULuaSetHelper::CopyFrom(USetProperty* p, void* ptr)
+void ULuaSetHelper::CopyFrom(FSetProperty* p, void* ptr)
 {
 	if (ptr == Obj && p == Property)
 		return;
@@ -91,7 +91,7 @@ void ULuaSetHelper::CopyFrom(USetProperty* p, void* ptr)
 	Copy(SrcSetHelper, DestSetHelper, Property);
 }
 
-void ULuaSetHelper::GlueSetCopyTo(USetProperty* p, const void* src, const void* dest)
+void ULuaSetHelper::GlueSetCopyTo(FSetProperty* p, const void* src, const void* dest)
 {
 	FScriptSetHelper SrcHelper(p, src);
 	FScriptSetHelper DestHelper(p, dest);
@@ -114,7 +114,7 @@ int32 ULuaSetHelper::Get(lua_State* inL)
 	}
 #endif
 	FScriptSetHelper result(Property, Obj);
-	UProperty* CurrKeyProp = Property->ElementProp;
+	FProperty* CurrKeyProp = Property->ElementProp;
 	const int32 KeyPropertySize = CurrKeyProp->ElementSize * CurrKeyProp->ArrayDim;
 	void* KeyStorageSpace = FMemory_Alloca(KeyPropertySize);
 	CurrKeyProp->InitializeValue(KeyStorageSpace);
@@ -150,7 +150,7 @@ void ULuaSetHelper::Set(lua_State* inL)
 	}
 #endif
 	FScriptSetHelper result(Property, Obj);
-	UProperty* CurrKeyProp = Property->ElementProp;
+	FProperty* CurrKeyProp = Property->ElementProp;
 	const int32 KeyPropertySize = CurrKeyProp->ElementSize * CurrKeyProp->ArrayDim;
 	void* KeyStorageSpace = FMemory_Alloca(KeyPropertySize);
 	CurrKeyProp->InitializeValue(KeyStorageSpace);

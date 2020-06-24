@@ -13,10 +13,10 @@ public:
 	ULuaMapHelper();
 	void* Obj;
 
-	UMapProperty* Property;
+	FMapProperty* Property;
 		
-	void Init(void* _Obj, UMapProperty* _Property);
-	void Init_ValuePtr(void* _Obj, UMapProperty* _Property);
+	void Init(void* _Obj, FMapProperty* _Property);
+	void Init_ValuePtr(void* _Obj, FMapProperty* _Property);
 
 	template<class K, class V>
 	TMap<K, V>* ValuePtr()
@@ -29,13 +29,13 @@ public:
 
 		static ULuaMapHelper* GetHelper(UObject* _Obj, const FName& PropertyName);
 
-	static ULuaMapHelper* GetHelperCPP(void* _Obj, UMapProperty* Property);
-	static ULuaMapHelper* GetHelperCPP_ValuePtr(void* _Obj, UMapProperty* Property);
+	static ULuaMapHelper* GetHelperCPP(void* _Obj, FMapProperty* Property);
+	static ULuaMapHelper* GetHelperCPP_ValuePtr(void* _Obj, FMapProperty* Property);
 
-	static void Copy(FScriptMapHelper& SrcMapHelper, FScriptMapHelper& DestMapHelper, UMapProperty* p);
-	void CopyTo(UMapProperty* p, void* ptr);
-	void CopyFrom(UMapProperty* p, void* ptr);
-	static void GlueMapCopyTo(UMapProperty* p, const void* src, const void* dest);
+	static void Copy(FScriptMapHelper& SrcMapHelper, FScriptMapHelper& DestMapHelper, FMapProperty* p);
+	void CopyTo(FMapProperty* p, void* ptr);
+	void CopyFrom(FMapProperty* p, void* ptr);
+	static void GlueMapCopyTo(FMapProperty* p, const void* src, const void* dest);
 
 	int32 Num();
 

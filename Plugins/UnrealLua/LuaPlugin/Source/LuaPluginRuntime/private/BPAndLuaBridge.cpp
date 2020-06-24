@@ -39,9 +39,9 @@
 // 		UClass* Class = p->GetClass();
 // 		if (Class->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
 // 		{
-// 			for (TFieldIterator<UProperty> PropertyIt(Class); PropertyIt; ++PropertyIt)
+// 			for (TFieldIterator<FProperty> PropertyIt(Class); PropertyIt; ++PropertyIt)
 // 			{
-// 				UProperty* Property = *PropertyIt;
+// 				FProperty* Property = *PropertyIt;
 // 				if (UClass* OuterClass = Cast<UClass>(Property->GetOuter()))
 // 				{
 // 					if (OuterClass->HasAnyClassFlags(CLASS_CompiledFromBlueprint))
@@ -65,10 +65,10 @@
 // 	int ArgCount = lua_gettop(inL);
 // 
 // 	// Iterate over input parameters
-// 	TArray<UProperty*> PushBackParms;
-// 	TArray<UProperty*> ReturnParms;
+// 	TArray<FProperty*> PushBackParms;
+// 	TArray<FProperty*> ReturnParms;
 // 	TArray<int32> StackIndexs;
-// 	for (TFieldIterator<UProperty> It(Function); It && (It->GetPropertyFlags() & (CPF_Parm)); ++It)
+// 	for (TFieldIterator<FProperty> It(Function); It && (It->GetPropertyFlags() & (CPF_Parm)); ++It)
 // 	{
 // 		auto Prop = *It;
 // 
@@ -94,12 +94,12 @@
 // 		}
 // 	}
 // 	Obj->ProcessEvent(Function, Buffer);
-// 	for (UProperty* Prop : ReturnParms)
+// 	for (FProperty* Prop : ReturnParms)
 // 	{
 // 		UTableUtil::push_ret_property(inL, Prop, Buffer);
 // 	}
 // 	int32 i = 0;
-// 	for (UProperty* Prop : PushBackParms)
+// 	for (FProperty* Prop : PushBackParms)
 // 	{
 // 		UTableUtil::pushback_ref_property(inL, StackIndexs[i], Prop, Buffer);
 // 		++i;
@@ -111,13 +111,13 @@
 // 
 // int32 UBPAndLuaBridge::GetBlueprintProperty(Flua_State inL, UObject *Property, UObject* Obj)
 // {
-// 	UTableUtil::pushproperty(inL.TheState, (UProperty*)Property, Obj);
+// 	UTableUtil::pushproperty(inL.TheState, (FProperty*)Property, Obj);
 // 	return 1;
 // }
 // 
 // void UBPAndLuaBridge::SetBlueprintProperty(Flua_State inL, UObject *Property, UObject* Obj, Flua_Index Index)
 // {
-// 	UTableUtil::popproperty(inL.TheState, Index, (UProperty*)Property, Obj);
+// 	UTableUtil::popproperty(inL.TheState, Index, (FProperty*)Property, Obj);
 // }
 
 

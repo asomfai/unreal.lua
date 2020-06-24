@@ -140,9 +140,9 @@ struct LuaStringBuffer
 #define LuaDebug 0
 #endif
 
-#define REFLECTION_FUNC(PropertyType) static void pushproperty_##PropertyType(lua_State*inL, UProperty* p, const void*ptr)\
+#define REFLECTION_FUNC(PropertyType) static void pushproperty_##PropertyType(lua_State*inL, FProperty* p, const void*ptr)\
 										{pushproperty_type(inL, (PropertyType*)p, ptr); }\
-									 static void popproperty_##PropertyType(lua_State*inL, int index, UProperty* p, void*ptr)\
+									 static void popproperty_##PropertyType(lua_State*inL, int index, FProperty* p, void*ptr)\
 										{popproperty_type(inL, index, (PropertyType*)p, ptr); }\
 									static void pushproperty_type(lua_State*inL, PropertyType* p, const void*ptr);\
 									static void pushproperty_type_valueptr(lua_State*inL, PropertyType* p, const void*ptr);\
@@ -434,7 +434,7 @@ public:
 	static bool CheckIsChildClass(int32 ParentType, int32 ChildTypeToCheck);
 	static TArray<UnrealLuaBlueFunc>* CreateOverloadCandidate(lua_State*inL, const TArray<UnrealLuaBlueFunc>& Data);
 	static UnrealLua::ArgType GetNewType(const FString& ClassName);
-	static struct LuaBaseBpInterface* GetBpPropertyInterface(lua_State*inL, UProperty* BpField);
+	static struct LuaBaseBpInterface* GetBpPropertyInterface(lua_State*inL, FProperty* BpField);
 	static struct LuaBaseBpInterface* GetBpFuncInterface(lua_State*inL, UFunction* BpFunction);
 	static struct MuldelegateBpInterface* GetMultiDlgInterface(UFunction* SigFunction);
 	static bool IsStateShutdown(lua_State*inL);
@@ -509,8 +509,8 @@ public:
 	static TMap<FString, TMap<FString, UnrealLuaBlueFunc>> ExpandClassGlue;
 	static TMap<FString, TArray<EnumGlueStruct> > ManualEnumGlue;
 
-	static TMap<UClass*, TFunction<void(lua_State*, UProperty*, const void*)> > PropertyClassToPushFuncMap;
-	static TMap<UClass*, TFunction<void(lua_State*, int, UProperty*, void*)> > PropertyClassToPopFuncMap;
+	static TMap<FFieldClass*, TFunction<void(lua_State*, FProperty*, const void*)> > PropertyClassToPushFuncMap;
+	static TMap<FFieldClass*, TFunction<void(lua_State*, int, FProperty*, void*)> > PropertyClassToPopFuncMap;
 	static bool requirecpp(lua_State* inL, const FString& classname);
 	static bool requirecpp(lua_State* inL, const char* classname);
 	
@@ -541,41 +541,41 @@ public:
 	static void rmgcref(lua_State*inL, UObject* p);
 	static void addgcref(lua_State*inL, UObject* p);
 	static void push_totable(lua_State*inL, UScriptStruct* StructType, const void* p);
-	static void push_totable(lua_State*inL, UProperty* Property, const void* p);
-	static void push_totable(lua_State*inL, UArrayProperty* Property, const void* p);
-	static void push_totable(lua_State*inL, UMapProperty* Property, const void* p);
-	static void push_totable(lua_State*inL, USetProperty* Property, const void* p);
+	static void push_totable(lua_State*inL, FProperty* Property, const void* p);
+	static void push_totable(lua_State*inL, FArrayProperty* Property, const void* p);
+	static void push_totable(lua_State*inL, FMapProperty* Property, const void* p);
+	static void push_totable(lua_State*inL, FSetProperty* Property, const void* p);
 
-	REFLECTION_FUNC(UBoolProperty)
-		REFLECTION_FUNC(UIntProperty)
-		REFLECTION_FUNC(UInt8Property)
-		REFLECTION_FUNC(UUInt16Property)
-		REFLECTION_FUNC(UInt16Property)
-		REFLECTION_FUNC(UUInt32Property)
-		REFLECTION_FUNC(UInt64Property)
-		REFLECTION_FUNC(UUInt64Property)
-		REFLECTION_FUNC(UFloatProperty)
-		REFLECTION_FUNC(UDoubleProperty)
-		REFLECTION_FUNC(UObjectPropertyBase)
-		REFLECTION_FUNC(UObjectProperty)
-		REFLECTION_FUNC(UClassProperty)
-		REFLECTION_FUNC(UStrProperty)
-		REFLECTION_FUNC(UNameProperty)
-		REFLECTION_FUNC(UTextProperty)
-		REFLECTION_FUNC(UByteProperty)
-		REFLECTION_FUNC(UEnumProperty)
-		REFLECTION_FUNC(UStructProperty)
-		REFLECTION_FUNC(UMulticastDelegateProperty)
+	REFLECTION_FUNC(FBoolProperty)
+		REFLECTION_FUNC(FIntProperty)
+		REFLECTION_FUNC(FInt8Property)
+		REFLECTION_FUNC(FUInt16Property)
+		REFLECTION_FUNC(FInt16Property)
+		REFLECTION_FUNC(FUInt32Property)
+		REFLECTION_FUNC(FInt64Property)
+		REFLECTION_FUNC(FUInt64Property)
+		REFLECTION_FUNC(FFloatProperty)
+		REFLECTION_FUNC(FDoubleProperty)
+		REFLECTION_FUNC(FObjectPropertyBase)
+		REFLECTION_FUNC(FObjectProperty)
+		REFLECTION_FUNC(FClassProperty)
+		REFLECTION_FUNC(FStrProperty)
+		REFLECTION_FUNC(FNameProperty)
+		REFLECTION_FUNC(FTextProperty)
+		REFLECTION_FUNC(FByteProperty)
+		REFLECTION_FUNC(FEnumProperty)
+		REFLECTION_FUNC(FStructProperty)
+		REFLECTION_FUNC(FMulticastDelegateProperty)
 #if ENGINE_MINOR_VERSION >= 23
-		REFLECTION_FUNC(UMulticastInlineDelegateProperty)
-		REFLECTION_FUNC(UMulticastSparseDelegateProperty)
+		REFLECTION_FUNC(FMulticastInlineDelegateProperty)
+		REFLECTION_FUNC(FMulticastSparseDelegateProperty)
 #endif
-		REFLECTION_FUNC(UDelegateProperty)
-		REFLECTION_FUNC(UWeakObjectProperty)
-		REFLECTION_FUNC(UArrayProperty)
-		REFLECTION_FUNC(UMapProperty)
-		REFLECTION_FUNC(USetProperty)
-		REFLECTION_FUNC(UInterfaceProperty)
+		REFLECTION_FUNC(FDelegateProperty)
+		REFLECTION_FUNC(FWeakObjectProperty)
+		REFLECTION_FUNC(FArrayProperty)
+		REFLECTION_FUNC(FMapProperty)
+		REFLECTION_FUNC(FSetProperty)
+		REFLECTION_FUNC(FInterfaceProperty)
 
 // knowtype push start
 	static int push(lua_State *inL) { return 0; }
@@ -764,12 +764,12 @@ public:
 		return 1;
 	}
 
-	static void pushproperty(lua_State*inL, UProperty* property, const void* ptr);
-	static void push_ret_property(lua_State*inL, UProperty* property, const void* ptr);
-	static void pushback_ref_property(lua_State*inL, int32 LuaStackIndex, UProperty* property, const void* ptr);
+	static void pushproperty(lua_State*inL, FProperty* property, const void* ptr);
+	static void push_ret_property(lua_State*inL, FProperty* property, const void* ptr);
+	static void pushback_ref_property(lua_State*inL, int32 LuaStackIndex, FProperty* property, const void* ptr);
 
-	static void pushproperty_valueptr(lua_State*inL, UProperty* property, const void* ptr);
-	static void popproperty(lua_State* inL, int index, UProperty* property, void* ptr);
+	static void pushproperty_valueptr(lua_State*inL, FProperty* property, const void* ptr);
+	static void popproperty(lua_State* inL, int index, FProperty* property, void* ptr);
 
 
 	FORCEINLINE static void pushall(lua_State *inL)
@@ -949,7 +949,7 @@ public:
 		return *Ptr;
 	}
 
-	static UnrealLua::ArgType GetTypeOfProperty(UProperty* Property);
+	static UnrealLua::ArgType GetTypeOfProperty(FProperty* Property);
 };
 
 class FLuaGcObj : public FGCObject
