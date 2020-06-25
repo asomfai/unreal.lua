@@ -14,6 +14,6 @@ public class CatchMe : ModuleRules
 
         PublicDependencyModuleNames.Add("LuaPluginRuntime");
         PublicDependencyModuleNames.Add("LuaManuallyGlue");
-        PublicDependencyModuleNames.Add("Lua53");
+        PublicDependencyModuleNames.Add("Lua51");
     }
 }

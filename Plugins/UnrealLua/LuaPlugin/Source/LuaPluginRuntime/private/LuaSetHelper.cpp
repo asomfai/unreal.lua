@@ -205,7 +205,7 @@ int32 ULuaSetHelper::Table(lua_State* inL)
 int32 ULuaSetHelper::__index(lua_State* inL)
 {
 	lua_pushvalue(inL, 2); 
-	int32 Type = lua_rawget(inL, lua_upvalueindex(1)); 
+	int32 Type = ue_lua_rawget(inL, lua_upvalueindex(1));
 	if (Type == LUA_TNIL)
 	{
 		ULuaSetHelper* ptr = (ULuaSetHelper*)tovoidtype<ULuaSetHelper>(inL, 1);

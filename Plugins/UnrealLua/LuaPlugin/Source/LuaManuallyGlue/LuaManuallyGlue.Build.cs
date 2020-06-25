@@ -34,7 +34,7 @@ public class LuaManuallyGlue : ModuleRules
             "AssetRegistry",
             "NetWorking",
             "Sockets",
-            "Lua53",
+            "Lua51",
             "LuaPluginRuntime"
         });
     }

@@ -26,7 +26,7 @@ void ULuaMapHelper::Init_ValuePtr(void* _Obj, FMapProperty* _Property)
 int32 ULuaMapHelper::__index(lua_State* inL)
 {
 	lua_pushvalue(inL, 2);
-	int32 Type = lua_rawget(inL, lua_upvalueindex(1));
+	int32 Type = ue_lua_rawget(inL, lua_upvalueindex(1));
 	if (Type == LUA_TNIL)
 	{
 		ULuaMapHelper* p = (ULuaMapHelper*)tovoidtype<ULuaMapHelper>(inL, 1);
@@ -47,7 +47,7 @@ int32 ULuaMapHelper::__newindex(lua_State* inL)
 
 ULuaMapHelper* ULuaMapHelper::GetHelper(UObject* _Obj, const FName& PropertyName)
 {
-	FMapProperty* P = Cast<FMapProperty>(_Obj->GetClass()->FindPropertyByName(PropertyName));
+	FMapProperty* P = CastField<FMapProperty>(_Obj->GetClass()->FindPropertyByName(PropertyName));
 	if (P)
 	{
 		return GetHelperCPP(_Obj, P);

@@ -2,17 +2,24 @@
 
 #pragma once
 
-#ifdef USE_LUA53 
+#if defined(USE_LUA53)
 #include "fix_lua.hpp"
 #define lua_objlen lua_rawlen 
+#elif defined(USE_LUA51)
+#include "lua.hpp"
 #else
 #include "lua_tinker.h"
 #endif
 
 const int CppInstanceIndex = 1;
-const int ExistTableIndex = LUA_RIDX_LAST + 1;
 
-#ifdef USE_LUA53 
+#if LUA_VERSION_NUM >= 503
+const int ExistTableIndex = LUA_RIDX_LAST + 1;
+#else
+static const char *ExistTableIndex = "unreal.lua.ExistTableIndex";
+#endif
+
+#if defined(USE_LUA53) | defined(USE_LUA51)
 #define ue_lua_gettop lua_gettop
 #define ue_lua_close lua_close
 #define ue_lua_gettop lua_gettop
@@ -34,21 +41,63 @@ const int ExistTableIndex = LUA_RIDX_LAST + 1;
 #define ue_lua_pushboolean lua_pushboolean
 #define ue_lua_gettable lua_gettable
 #define ue_lua_getfield lua_getfield
+#define ue_lua_type lua_type
+
+#if LUA_VERSION_NUM >=503
 #define ue_lua_rawget lua_rawget
+#else
+inline int ue_lua_rawget(lua_State*L, int i)
+{
+      lua_rawget(L, i);
+      return ue_lua_type(L, -1);
+}
+#endif
+
+#if LUA_VERSION_NUM >=503
+#define ue_lua_rawgetp lua_rawgetp
+#else
+inline int ue_lua_rawgetp(lua_State*L, int i, void *p)
+{
+  int table_index = ue_lua_abs_index(L, i);
+  lua_pushlightuserdata(L, p);
+  lua_rawget(L, table_index);
+  return ue_lua_type(L, -1);
+}
+#endif
+
 #define ue_lua_rawgeti lua_rawgeti
 #define ue_lua_createtable lua_createtable
 #define ue_lua_rawset lua_rawset
 #define ue_lua_rawseti lua_rawseti
+
+#if LUA_VERSION_NUM >=503
+#define ue_lua_rawsetp lua_rawsetp
+#else
+inline void ue_lua_rawsetp(lua_State*L, int i, void *p)
+{
+  int table_index = ue_lua_abs_index(L, i);
+  lua_pushlightuserdata(L, p);
+  lua_rawset(L, table_index);
+}
+#endif
+
 #define ue_lua_setmetatable lua_setmetatable
 #define ue_lua_pcall lua_pcall
 #define ue_lua_pushcclosure lua_pushcclosure
 #define ue_lua_next lua_next
 #define ue_lua_error lua_error
-#define ue_lua_type lua_type
 #define ue_lua_newuserdata lua_newuserdata
 #define ue_lua_getmetatable lua_getmetatable
 #define ue_lua_isuserdata lua_isuserdata
+#if LUA_VERSION_NUM >=503
 #define ue_lua_getglobal lua_getglobal
+#else
+inline int ue_lua_getglobal(lua_State*L, const char *name)
+{
+  lua_getglobal(L, name);
+  return ue_lua_type(L, -1);
+}
+#endif
 #define ue_lua_isinteger lua_isinteger
 #define ue_lua_isnumber lua_isnumber
 #define ue_lua_isstring lua_isstring

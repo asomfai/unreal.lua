@@ -638,6 +638,7 @@ function TestBpClass:TestNativePublicPropertyReadWrite( )
 	self.test_weakptr_public = nil
 	assert(self.test_weakptr_public == nil)
 
+	a_("self.test_arr_public=["..tostring(self.test_arr_public[1])..","..tostring(self.test_arr_public[2])..","..tostring(self.test_arr_public[3]).."]")
 	assert(self.test_arr_public:Num() == 3)
 	assert(self.test_arr_public[1] == 2)
 	assert(self.test_arr_public[2] == 3)
@@ -1745,7 +1746,8 @@ function TestBpClass:TestArrRef()
 		assert(v[3] == 7)
 	end
 	local HasCome = false
-	for i,v in pairs(tt2) do
+--	for i,v in pairs(tt2) do
+	for i,v in tt2.__pairs() do
 		assert(v == 9 and i == 1)
 		HasCome = true
 		break

@@ -129,7 +129,7 @@ int32 ULuaArrayHelper::Get(lua_State* inL)
 
 int32 ULuaArrayHelper::__index(lua_State* inL)
 {
-	if (lua_isinteger(inL, 2))
+	if (lua_isinteger(inL, 2)) // Before lua 5.3: integer type is not supported, table can be indexed with float, index will be  truncated to int
 	{
 		ULuaArrayHelper* ptr = (ULuaArrayHelper *)tovoidtype<ULuaArrayHelper>(inL, 1);
 		return ptr->Get(inL);

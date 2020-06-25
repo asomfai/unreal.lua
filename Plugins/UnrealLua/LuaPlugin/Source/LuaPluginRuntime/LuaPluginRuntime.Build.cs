@@ -29,12 +29,23 @@ public class LuaPluginRuntime : ModuleRules
         PublicIncludePaths.Add(Path.Combine(LuaLibPath, "Include"));
 
         // use 5.3 or 5.1
-        bool IsUseLua53 = true;
+        bool IsUseLua53 = false;
+        bool IsUseLua51 = true;
 
         if (IsUseLua53)
         {
             PublicDependencyModuleNames.Add("Lua53");
             PublicDefinitions.Add("USE_LUA53");
+            if (Target.Platform == UnrealTargetPlatform.Win64)
+            {
+                PublicDefinitions.Add("LUA_BUILD_AS_DLL"); 
+//                 Definitions.Add("USE_LUASOURCE");
+            }
+        }
+        else if(IsUseLua51)
+        {
+            PublicDependencyModuleNames.Add("Lua51");
+            PublicDefinitions.Add("USE_LUA51");
             if (Target.Platform == UnrealTargetPlatform.Win64)
             {
                 PublicDefinitions.Add("LUA_BUILD_AS_DLL"); 

@@ -238,18 +238,23 @@ void UTableUtil::PowerTheState(lua_State* inL)
 	countforgc.FindOrAdd(inL);
 #endif
 	//set table for index exist userdata
-	lua_newtable(inL);
+  lua_newtable(inL);
 	lua_newtable(inL);
 	lua_pushstring(inL, "v");
 	lua_setfield(inL, -2, "__mode");
 	lua_setmetatable(inL, -2);
-	lua_seti(inL, LUA_REGISTRYINDEX, ExistTableIndex);
-	lua_pushinteger(inL, 0);
-	lua_seti(inL, LUA_REGISTRYINDEX, ExistTableIndex+1);
-	lua_pushinteger(inL, 0);
-	lua_seti(inL, LUA_REGISTRYINDEX, ExistTableIndex+2);
-	lua_pushinteger(inL, 0);
-	lua_seti(inL, LUA_REGISTRYINDEX, ExistTableIndex+3);
+#if LUA_VERSION_NUM >= 503
+  lua_seti(inL, LUA_REGISTRYINDEX, ExistTableIndex);
+  lua_pushinteger(inL, 0);
+  lua_seti(inL, LUA_REGISTRYINDEX, ExistTableIndex + 1);
+  lua_pushinteger(inL, 0);
+  lua_seti(inL, LUA_REGISTRYINDEX, ExistTableIndex + 2);
+  lua_pushinteger(inL, 0);
+  lua_seti(inL, LUA_REGISTRYINDEX, ExistTableIndex + 3);
+#else
+  lua_setfield(inL, LUA_REGISTRYINDEX, ExistTableIndex);
+#endif
+
 
 	lua_newtable(inL);
 	lua_setfield(inL, LUA_REGISTRYINDEX, "_existfirststruct");
@@ -1258,7 +1263,7 @@ FString PrintLuaStackOfL(lua_State* inL)
 
 void UTableUtil::setmeta(lua_State *inL, const char* classname, int index, bool bIsStruct, bool bNeedGc)
 {
-	int32 Type = lua_getglobal(inL, classname);
+	int32 Type = ue_lua_getglobal(inL, classname);
 	if (Type == LUA_TTABLE)
 	{
 		lua_setmetatable(inL, index - 1);
@@ -2423,18 +2428,35 @@ bool UTableUtil::requirecpp(lua_State* inL, const FString& classname)
 
 bool UTableUtil::requirecpp(lua_State* inL, const char* classname)
 {
+//  UTableUtil::log(FString("requirecpp:"));
+//  UTableUtil::log(FString(classname));
+#if LUA_VERSION_NUM >= 503
 	lua_geti(inL, LUA_REGISTRYINDEX, LUA_RIDX_GLOBALS);
-	lua_pushstring(inL, classname);
-	int32 Type = lua_rawget(inL, -2);
+  lua_pushstring(inL, classname);
+  int32 Type = lua_rawget(inL, -2);
+#else
+  lua_pushstring(inL, classname);
+  int32 Type = ue_lua_rawget(inL, LUA_GLOBALSINDEX);
+#endif
 	if (Type == LUA_TNIL)
 	{
-		lua_pop(inL, 2);
-		return requirecpp(inL, FString(classname));
+#if LUA_VERSION_NUM >= 503
+    lua_pop(inL, 2);
+#else
+    lua_pop(inL, 1);
+#endif
+//    UTableUtil::log(FString("new"));
+    return requirecpp(inL, FString(classname));
 	}
 	else
 	{
-		lua_pop(inL, 2);
-		return false;
+#if LUA_VERSION_NUM >= 503
+    lua_pop(inL, 2);
+#else
+    lua_pop(inL, 1);
+#endif
+//    UTableUtil::log(FString("exists"));
+    return false;
 	}
 }
 
@@ -2786,8 +2808,12 @@ void pushuobject(lua_State *inL, void* p, bool bgcrecord)
 		{
 			*(void**)lua_newuserdata(inL, sizeof(void *)) = p;
 
-			lua_geti(inL, LUA_REGISTRYINDEX, ExistTableIndex);
-			lua_pushlightuserdata(inL, p);
+#if LUA_VERSION_NUM >= 503
+      lua_geti(inL, LUA_REGISTRYINDEX, ExistTableIndex);
+#else
+      lua_getfield(inL, LUA_REGISTRYINDEX, ExistTableIndex);
+#endif
+      lua_pushlightuserdata(inL, p);
 			lua_pushvalue(inL, -3);
 			lua_rawset(inL, -3);
 			lua_pop(inL, 1);
@@ -2839,8 +2865,12 @@ void pushstruct_temp(lua_State *inL, const char* structname, const char* structn
 	}
 #endif
 
-	lua_geti(inL, LUA_REGISTRYINDEX, ExistTableIndex);
-	int32 Type = lua_rawgetp(inL, -1, p);
+#if LUA_VERSION_NUM >= 503
+  lua_geti(inL, LUA_REGISTRYINDEX, ExistTableIndex);
+#else
+  lua_getfield(inL, LUA_REGISTRYINDEX, ExistTableIndex);
+#endif
+  int32 Type = ue_lua_rawgetp(inL, -1, p);
 	if (Type == LUA_TNIL)
 	{
 		lua_pop(inL, 1);
@@ -2848,7 +2878,7 @@ void pushstruct_temp(lua_State *inL, const char* structname, const char* structn
 		UTableUtil::requirecpp(inL, structname);
 		UTableUtil::setmeta(inL, structname_nogc, -1, true, false);
 		lua_pushvalue(inL, -1);
-		lua_rawsetp(inL, -3, p);
+		ue_lua_rawsetp(inL, -3, p);
 		lua_remove(inL, -2);
 	}
 	else
@@ -3082,8 +3112,12 @@ void UTableUtil::loadstruct(lua_State *inL, TMap<FString, UnrealLuaBlueFunc>& fu
 
 bool existdata(lua_State*inL, void * p)
 {
-	lua_geti(inL, LUA_REGISTRYINDEX, ExistTableIndex);
-	lua_pushlightuserdata(inL, p);
+#if LUA_VERSION_NUM >= 503
+  lua_geti(inL, LUA_REGISTRYINDEX, ExistTableIndex);
+#else
+  lua_getfield(inL, LUA_REGISTRYINDEX, ExistTableIndex);
+#endif
+  lua_pushlightuserdata(inL, p);
 	lua_rawget(inL, -2);
 	if (lua_isnil(inL, -1))
 	{
@@ -3100,8 +3134,12 @@ bool existdata(lua_State*inL, void * p)
 
 bool UTableUtil::existluains(lua_State*inL, void * p)
 {
-	lua_geti(inL, LUA_REGISTRYINDEX, ExistTableIndex);
-	lua_pushlightuserdata(inL, p);
+#if LUA_VERSION_NUM >= 503
+  lua_geti(inL, LUA_REGISTRYINDEX, ExistTableIndex);
+#else
+  lua_getfield(inL, LUA_REGISTRYINDEX, ExistTableIndex);
+#endif
+  lua_pushlightuserdata(inL, p);
 	lua_rawget(inL, -2);
 	bool bDoesExist = false;
 	if (lua_istable(inL, -1))

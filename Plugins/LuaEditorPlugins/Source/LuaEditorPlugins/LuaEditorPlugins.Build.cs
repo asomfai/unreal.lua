@@ -28,7 +28,7 @@ public class LuaEditorPlugins : ModuleRules
 				"Core",
                 "LuaPluginRuntime",
                 "LuaManuallyGlue",
-                "Lua53",
+                "Lua51",
                 "UMG",
                 "RHI",
                 "RenderCore",

@@ -156,7 +156,11 @@ int CustomLuaLoader_SearchSaved(lua_State* L)
 
 int SetExistTable(lua_State* inL)
 {
+#if LUA_VERSION_NUM >= 503
 	lua_geti(inL, LUA_REGISTRYINDEX, ExistTableIndex);
+#else
+  lua_getfield(inL, LUA_REGISTRYINDEX, ExistTableIndex);
+#endif
 	auto u = static_cast<void**>(lua_touserdata(inL, 1));
 	if (u == nullptr)
 	{
@@ -180,7 +184,7 @@ template<bool HasGlueFunc>
 int32 index_reflection_uobject_func_withexpand(lua_State* inL)
 {
 	lua_pushvalue(inL, 2);
-	int32 Type = lua_rawget(inL, lua_upvalueindex(2));
+	int32 Type = ue_lua_rawget(inL, lua_upvalueindex(2));
 	if (HasGlueFunc && Type == LUA_TLIGHTUSERDATA)
 	{
 		auto f = (lua_CFunction)lua_touserdata(inL, -1);
@@ -190,7 +194,7 @@ int32 index_reflection_uobject_func_withexpand(lua_State* inL)
 	{
 		lua_rawgeti(inL, -1, 2);//cached
 		lua_pushvalue(inL, 1);
-		int32 Type1 = lua_rawget(inL, -2);
+		int32 Type1 = ue_lua_rawget(inL, -2);
 		if (Type1 == LUA_TNIL)
 		{
 			lua_rawgeti(inL, -3, 1);//func
@@ -222,7 +226,7 @@ int32 index_reflection_uobject_func_withexpand(lua_State* inL)
 	}
 
 	lua_pushvalue(inL, 2);
-	Type = lua_rawget(inL, lua_upvalueindex(1));
+	Type = ue_lua_rawget(inL, lua_upvalueindex(1));
 	if (Type != LUA_TNIL)
 	{
 		return 1;
@@ -276,7 +280,7 @@ template<bool HasGlueFunc>
 int32 newindex_reflection_uobject_func_withexpand(lua_State* inL)
 {
 	lua_pushvalue(inL, 2);
-	int32 Type = lua_rawget(inL, lua_upvalueindex(2));
+	int32 Type = ue_lua_rawget(inL, lua_upvalueindex(2));
 
 	if (HasGlueFunc && Type == LUA_TLIGHTUSERDATA)
 	{
@@ -339,7 +343,7 @@ template<bool HasGlueFunc>
 int32 try_newindex_reflection_uobject_func_withexpand(lua_State* inL)
 {
 	lua_pushvalue(inL, 2);
-	int32 Type = lua_rawget(inL, lua_upvalueindex(1));
+	int32 Type = ue_lua_rawget(inL, lua_upvalueindex(1));
 
 	if (HasGlueFunc && Type == LUA_TLIGHTUSERDATA)
 	{
@@ -398,7 +402,7 @@ int32 try_newindex_reflection_uobject_func_withexpand(lua_State* inL)
 
 int32 IndexStaticProperty(lua_State* inL)
 {
-	int32 Type = lua_rawget(inL, lua_upvalueindex(1));
+	int32 Type = ue_lua_rawget(inL, lua_upvalueindex(1));
 	if (Type == LUA_TFUNCTION)
 	{
 		auto f = lua_tocfunction(inL, -1);
@@ -416,7 +420,7 @@ int32 IndexStaticProperty(lua_State* inL)
 int32 ObjectIndexStaticProperty(lua_State* inL)
 {
 	lua_pushvalue(inL, 2);
-	int32 Type = lua_rawget(inL, lua_upvalueindex(2));
+	int32 Type = ue_lua_rawget(inL, lua_upvalueindex(2));
 
 	if (Type == LUA_TFUNCTION)
 	{
@@ -454,7 +458,7 @@ int32 ObjectIndexStaticProperty(lua_State* inL)
 int32 NewindexStaticProperty(lua_State* inL)
 {
 	lua_pushvalue(inL, 2);
-	int32 Type = lua_rawget(inL, lua_upvalueindex(1));
+	int32 Type = ue_lua_rawget(inL, lua_upvalueindex(1));
 	if (Type == LUA_TFUNCTION)
 	{
 		auto f = lua_tocfunction(inL, -1);
@@ -472,7 +476,7 @@ int32 NewindexStaticProperty(lua_State* inL)
 int32 ObjectNewindexStaticProperty(lua_State* inL)
 {
 	lua_pushvalue(inL, 2);
-	int32 Type = lua_rawget(inL, lua_upvalueindex(1));
+	int32 Type = ue_lua_rawget(inL, lua_upvalueindex(1));
 	if (Type == LUA_TFUNCTION)
 	{
 		auto f = lua_tocfunction(inL, -1);
@@ -491,7 +495,7 @@ int32 ObjectNewindexStaticProperty(lua_State* inL)
 
 int32 index_struct_func(lua_State* inL)
 {
-	int32 Type = lua_rawget(inL, lua_upvalueindex(1));
+	int32 Type = ue_lua_rawget(inL, lua_upvalueindex(1));
 	if (Type == LUA_TLIGHTUSERDATA)
 	{
 		auto f = (lua_CFunction)lua_touserdata(inL, -1);
@@ -501,7 +505,7 @@ int32 index_struct_func(lua_State* inL)
 	{
 		lua_rawgeti(inL, -1, 2);//cached
 		lua_pushvalue(inL, 1);
-		int32 Type1 = lua_rawget(inL, -2);
+		int32 Type1 = ue_lua_rawget(inL, -2);
 		if (Type1 == LUA_TNIL)
 		{
 			lua_rawgeti(inL, -3, 1);//func
@@ -519,7 +523,7 @@ template<bool HasGlueFunc>
 int32 index_struct_func_with_class_with_glue(lua_State* inL)
 {
 	lua_pushvalue(inL, 2);
-	int32 Type = lua_rawget(inL, lua_upvalueindex(2));
+	int32 Type = ue_lua_rawget(inL, lua_upvalueindex(2));
 	if (HasGlueFunc && Type == LUA_TLIGHTUSERDATA)
 	{
 		auto f = (lua_CFunction)lua_touserdata(inL, -1);
@@ -529,7 +533,7 @@ int32 index_struct_func_with_class_with_glue(lua_State* inL)
 	{
 		lua_rawgeti(inL, -1, 2);//cached
 		lua_pushvalue(inL, 1);
-		int32 Type1 = lua_rawget(inL, -2);
+		int32 Type1 = ue_lua_rawget(inL, -2);
 		if (Type1 == LUA_TNIL)
 		{
 			lua_rawgeti(inL, -3, 1);//func
@@ -561,7 +565,7 @@ int32 index_struct_func_with_class_with_glue(lua_State* inL)
 	}
 	
 	lua_pushvalue(inL, 2);
-	Type = lua_rawget(inL, lua_upvalueindex(1));
+	Type = ue_lua_rawget(inL, lua_upvalueindex(1));
 	if (Type == LUA_TNIL)
 	{
 		lua_pushvalue(inL, lua_upvalueindex(3));
@@ -587,7 +591,7 @@ int32 index_struct_func_with_class_with_glue(lua_State* inL)
 int32 index_struct_func_with_extend(lua_State*inL)
 {
 	lua_pushvalue(inL, 2);
-	int32 Type = lua_rawget(inL, lua_upvalueindex(1));
+	int32 Type = ue_lua_rawget(inL, lua_upvalueindex(1));
 	if (Type == LUA_TLIGHTUSERDATA)
 	{
 		auto f = (lua_CFunction)lua_touserdata(inL, -1);
@@ -597,7 +601,7 @@ int32 index_struct_func_with_extend(lua_State*inL)
 	{
 		lua_rawgeti(inL, -1, 2);//cached
 		lua_pushvalue(inL, 1);
-		int32 Type1 = lua_rawget(inL, -2);
+		int32 Type1 = ue_lua_rawget(inL, -2);
 		if (Type1 == LUA_TNIL)
 		{
 			lua_rawgeti(inL, -3, 1);//func
@@ -631,7 +635,7 @@ template<bool HasGlueFunc>
 int32 newindex_struct_Func_with_class_with_glue(lua_State* inL)
 {
 	lua_pushvalue(inL, 2);
-	int32 Type = lua_rawget(inL, lua_upvalueindex(1));
+	int32 Type = ue_lua_rawget(inL, lua_upvalueindex(1));
 	
 	if (HasGlueFunc && Type == LUA_TLIGHTUSERDATA)
 	{
@@ -675,7 +679,7 @@ int32 newindex_struct_Func_with_class_with_glue(lua_State* inL)
 int32 newindex_struct_func_with_extend(lua_State* inL)
 {
 	lua_pushvalue(inL, 2);
-	int32 Type = lua_rawget(inL, lua_upvalueindex(1));
+	int32 Type = ue_lua_rawget(inL, lua_upvalueindex(1));
 	if (Type == LUA_TFUNCTION)
 	{
 		auto f = lua_tocfunction(inL, -1);

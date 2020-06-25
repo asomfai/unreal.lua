@@ -442,8 +442,12 @@ public:
 	FORCEINLINE static void JustPushAndRecord(lua_State*inL, void * p)
 	{
 		*(void**)ue_lua_newuserdata(inL, sizeof(void *)) = p;
-		lua_geti(inL, LUA_REGISTRYINDEX, ExistTableIndex);
-		lua_pushlightuserdata(inL, p);
+#if LUA_VERSION_NUM >= 503
+    lua_geti(inL, LUA_REGISTRYINDEX, ExistTableIndex);
+#else
+    lua_getfield(inL, LUA_REGISTRYINDEX, ExistTableIndex);
+#endif
+    lua_pushlightuserdata(inL, p);
 		lua_pushvalue(inL, -3);
 		lua_rawset(inL, -3);
 		lua_pop(inL, 1);
@@ -518,10 +522,13 @@ public:
 
 	static lua_State* GetMainThread(lua_State *inL)
 	{
+/*
 		lua_geti(inL, LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
 		lua_State* MainState = lua_tothread(inL, -1);
 		lua_pop(inL, 1);
 		return MainState;
+*/
+    return inL;
 	}
 
 	static void DoString(lua_State* inL, FString Str);

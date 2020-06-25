@@ -94,9 +94,11 @@ namespace UnrealLua
 			case LUA_TLIGHTUSERDATA:
 				return (int32)UnrealLua::Type::TYPE_TLIGHTUSERDATA;
 			case LUA_TNUMBER:
+#if LUA_VERSION_NUM >= 503
 				if (ue_lua_isinteger(inL, Index))
 					return (int32)UnrealLua::Type::TYPE_INTERGER;
 				else
+#endif
 					return (int32)UnrealLua::Type::TYPE_TNUMBER;
 			case LUA_TSTRING:
 				return (int32)UnrealLua::Type::TYPE_TSTRING;
