@@ -55,7 +55,7 @@ void ACMPlayerControllerBase::SetPawn(APawn* aPawn)
 void ACMPlayerControllerBase::GetInputState(TArray<float>& result)
 {
 	result.Reset();
-	for (int32 i = 0; i < ARRAY_COUNT(PlayerInput->Touches); i++)
+	for (int32 i = 0; i < UE_ARRAY_COUNT(PlayerInput->Touches); i++)
 	{
 		result.Add(PlayerInput->Touches[i].X);
 		result.Add(PlayerInput->Touches[i].Y);
