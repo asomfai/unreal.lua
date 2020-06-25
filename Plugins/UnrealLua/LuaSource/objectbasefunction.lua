@@ -1,4 +1,4 @@
-﻿requirecpp "UNZAssetManager" 
+requirecpp "UNZAssetManager" 
 local MemberFunction = {}
 
 function MemberFunction:AsyncLoad(ObjectSoftPath, ...)
